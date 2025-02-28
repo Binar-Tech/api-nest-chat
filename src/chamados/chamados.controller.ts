@@ -6,7 +6,7 @@ import { ChamadosService } from './chamados.service';
 export class ChamadosController {
   constructor(private readonly chamadosService: ChamadosService) {}
   @Get()
-  async getAvaliacaoPage(
+  async findChamadosByCnpjAndOperador(
     @Query('cnpj') cnpj: string,
     @Query('idOperador') idOperador: string,
     @Res() res: Response,
@@ -16,6 +16,16 @@ export class ChamadosController {
         cnpj,
         idOperador,
       );
+      return res.status(HttpStatus.OK).json(result);
+    } catch (error) {
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Get('/open')
+  async findChamadosByStatusOpen(@Res() res: Response) {
+    try {
+      const result = await this.chamadosService.findChamadosByStatusOpen();
       return res.status(HttpStatus.OK).json(result);
     } catch (error) {
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR);

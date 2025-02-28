@@ -1,4 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
+import { ReturnChamadoDto } from './dtos/returnChamado.dto';
+import { Chamado } from './interface/chamado.interface';
 
 @Injectable()
 export class ChamadosRepository {
@@ -8,18 +11,42 @@ export class ChamadosRepository {
   async findChamadosByCnpjAndOperador(
     cnpj: string,
     idOperador: string,
-  ): Promise<any> {
+  ): Promise<Chamado[]> {
     //const db = this.connectionService.getMainDatabase();
-    return new Promise((resolve, reject) => {
+    const result = await new Promise<Chamado[]>((resolve, reject) => {
       this.db.query(
-        'SELECT * FROM CHAMADOS WHERE CNPJ_OPERADOR = ? AND ID_OPERADOR = ?',
-        [cnpj, idOperador],
+        'SELECT * FROM CHAMADOS WHERE CNPJ_OPERADOR = ? AND ID_OPERADOR = ? AND STATUS = ?',
+        [cnpj, idOperador, 'ABERTO'],
         (err, result) => {
           if (err) return reject(err);
-
-          resolve(result[0] || {}); // Confirmando o tipo explicitamente
+          const plained = plainToInstance(Chamado, result, {
+            excludeExtraneousValues: true,
+          });
+          resolve(result); // Confirmando o tipo explicitamente
         },
       );
     });
+
+    return result;
+  }
+
+  //busca acessos com IDN_BIONOTIFICA = S
+  async findChamadosByStatusOpen(): Promise<Chamado[]> {
+    //const db = this.connectionService.getMainDatabase();
+    const result = await new Promise<Chamado[]>((resolve, reject) => {
+      this.db.query(
+        'SELECT * FROM CHAMADOS WHERE STATUS = ?',
+        ['ABERTO'],
+        (err, result) => {
+          if (err) return reject(err);
+          const plained = plainToInstance(Chamado, result, {
+            excludeExtraneousValues: true,
+          });
+          resolve(result); // Confirmando o tipo explicitamente
+        },
+      );
+    });
+
+    return result.map((chamado) => new ReturnChamadoDto(chamado));
   }
 }

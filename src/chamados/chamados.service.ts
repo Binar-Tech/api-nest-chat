@@ -13,4 +13,8 @@ export class ChamadosService {
       idOperador,
     );
   }
+
+  async findChamadosByStatusOpen(): Promise<any> {
+    return await this.chamadosRepository.findChamadosByStatusOpen();
+  }
 }

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
+import { ChamadosService } from 'src/chamados/chamados.service';
 import { AcceptCallDto } from './dto/accept-call.dto';
 import { CloseCallDto } from './dto/close-call.dto';
 import { LoginDto } from './dto/login.dto';
@@ -12,6 +13,7 @@ export class ChatService {
   private users: Map<string, User> = new Map(); // socketId -> User
   private calls: Map<string, Call> = new Map(); // chatId -> Call
 
+  constructor(private readonly chamadosService: ChamadosService) {}
   // Conexão de um usuário
   handleConnection(client: Socket) {
     console.log(`Usuário conectado: ${client.id}`);
