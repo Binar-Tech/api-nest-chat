@@ -28,6 +28,19 @@ export class ChatService {
     }
   }
 
+  // Login de um usuário
+  handleLogin(client: Socket, data: LoginDto) {
+    const user: User = {
+      nome: data.nome,
+      cnpj: data.cnpj,
+      socketId: client.id,
+      type: data.type,
+    };
+
+    this.users.set(client.id, user);
+    console.log(`Usuário logado: ${data.nome} (${client.id})`);
+  }
+
   // Iniciar um novo chat
   startChat(client: Socket) {
     // GRAVAR NO BANCO E RETORNAR O ID DA TABELA
@@ -160,18 +173,5 @@ export class ChatService {
       this.calls.delete(data.chatId);
       console.log(`Chat ${data.chatId} fechado`);
     }
-  }
-
-  // Login de um usuário
-  handleLogin(client: Socket, data: LoginDto) {
-    const user: User = {
-      nome: data.nome,
-      cnpj: data.cnpj,
-      socketId: client.id,
-      type: data.type,
-    };
-
-    this.users.set(client.id, user);
-    console.log(`Usuário logado: ${data.nome} (${client.id})`);
   }
 }
