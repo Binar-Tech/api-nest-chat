@@ -14,6 +14,9 @@ export class ChatService {
   private calls: Map<string, Call> = new Map(); // chatId -> Call
 
   constructor(private readonly chamadosService: ChamadosService) {}
+  getUsersConnected(): Map<string, User> {
+    return this.users;
+  }
   // Conexão de um usuário
   handleConnection(client: Socket) {
     console.log(`Usuário conectado: ${client.id}`);
