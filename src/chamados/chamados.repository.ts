@@ -11,7 +11,7 @@ export class ChamadosRepository {
   async findChamadosByCnpjAndOperador(
     cnpj: string,
     idOperador: string,
-  ): Promise<Chamado[]> {
+  ): Promise<Chamado> {
     //const db = this.connectionService.getMainDatabase();
     const result = await new Promise<Chamado[]>((resolve, reject) => {
       this.db.query(
@@ -27,7 +27,7 @@ export class ChamadosRepository {
       );
     });
 
-    return result;
+    return result[0] || null;
   }
 
   async findChamadosByStatusOpen(): Promise<Chamado[]> {

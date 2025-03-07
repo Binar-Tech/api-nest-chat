@@ -5,7 +5,7 @@ import { CreateMessageDto } from 'src/messages/dto/create-message.dto';
 import { AcceptCallDto } from './dto/accept-call.dto';
 import { CloseCallDto } from './dto/close-call.dto';
 import { LoginDto } from './dto/login.dto';
-import { loadChatsTecnico } from './functions/load-chats-tecnico';
+import { loadChats } from './functions/load-chats-tecnico';
 import { Call } from './interface/call.interface';
 import { User } from './interface/user.interface';
 
@@ -56,12 +56,12 @@ export class ChatService {
       cnpj: data.cnpj,
       socketId: client.id,
       type: data.type,
-      id: data.type === 'TECNICO' ? data.id : null,
+      id: data.id,
     };
 
     this.users.set(client.id, user);
 
-    await loadChatsTecnico(this.chamadosService, user, this.calls);
+    await loadChats(this.chamadosService, user, this.calls);
     console.log(`Usuário logado: ${data.nome} (${client.id})`);
   }
 

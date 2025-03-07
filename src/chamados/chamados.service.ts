@@ -8,7 +8,7 @@ export class ChamadosService {
   async findChamadosByCnpjAndOperador(
     cnpj: string,
     idOperador: string,
-  ): Promise<Chamado[]> {
+  ): Promise<Chamado> {
     return await this.chamadosRepository.findChamadosByCnpjAndOperador(
       cnpj,
       idOperador,
