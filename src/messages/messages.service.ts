@@ -7,8 +7,8 @@ import { MessagesRepository } from './messages.repository';
 @Injectable()
 export class MessagesService {
   constructor(private readonly messageRepository: MessagesRepository) {}
-  create(createMessageDto: CreateMessageDto) {
-    return 'This action adds a new message';
+  async createMessage(createMessageDto: CreateMessageDto) {
+    return await this.messageRepository.createMessage(createMessageDto);
   }
 
   findAll() {

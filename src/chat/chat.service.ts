@@ -1,21 +1,39 @@
 import { Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
 import { ChamadosService } from 'src/chamados/chamados.service';
+import { CreateMessageDto } from 'src/messages/dto/create-message.dto';
 import { AcceptCallDto } from './dto/accept-call.dto';
 import { CloseCallDto } from './dto/close-call.dto';
 import { LoginDto } from './dto/login.dto';
-import { MessageDto } from './dto/message.dto';
+import { loadChatsTecnico } from './functions/load-chats-tecnico';
 import { Call } from './interface/call.interface';
 import { User } from './interface/user.interface';
 
 @Injectable()
 export class ChatService {
   private users: Map<string, User> = new Map(); // socketId -> User
-  private calls: Map<string, Call> = new Map(); // chatId -> Call
+  private calls: Map<number, Call> = new Map(); // chatId -> Call
 
-  constructor(private readonly chamadosService: ChamadosService) {}
+  constructor(private readonly chamadosService: ChamadosService) {
+    this.initialize();
+  }
+  private async initialize() {
+    const calls = await this.chamadosService.findChamadosByStatusOpen();
+    calls.map((call) => {
+      const called: Call = {
+        id_chamado: call.id_chamado,
+        clientSocket: null,
+        technicianSockets: [],
+      };
+      this.calls.set(call.id_chamado, called);
+    });
+  }
   getUsersConnected(): Map<string, User> {
     return this.users;
+  }
+
+  getCalls(): Map<number, Call> {
+    return this.calls;
   }
   // Conexão de um usuário
   handleConnection(client: Socket) {
@@ -32,22 +50,25 @@ export class ChatService {
   }
 
   // Login de um usuário
-  handleLogin(client: Socket, data: LoginDto) {
+  async handleLogin(client: Socket, data: LoginDto) {
     const user: User = {
       nome: data.nome,
       cnpj: data.cnpj,
       socketId: client.id,
       type: data.type,
+      id: data.type === 'TECNICO' ? data.id : null,
     };
 
     this.users.set(client.id, user);
+
+    await loadChatsTecnico(this.chamadosService, user, this.calls);
     console.log(`Usuário logado: ${data.nome} (${client.id})`);
   }
 
   // Iniciar um novo chat
   startChat(client: Socket) {
     // GRAVAR NO BANCO E RETORNAR O ID DA TABELA
-    const chatId = `chat_${Date.now()}`;
+    const chatId = Date.now().valueOf();
 
     // Obtém o usuário que está iniciando o chat
     const user = this.users.get(client.id);
@@ -58,7 +79,7 @@ export class ChatService {
 
     // Cria uma nova chamada
     this.calls.set(chatId, {
-      chatId,
+      id_chamado: 1,
       clientSocket: user, // Armazena o usuário (cliente) que iniciou o chat
       technicianSockets: [], // Lista de técnicos/observadores
     });
@@ -100,8 +121,8 @@ export class ChatService {
   }
 
   // Enviar uma mensagem
-  sendMessage(client: Socket, data: MessageDto) {
-    const call = this.calls.get(data.chatId);
+  sendMessage(client: Socket, data: CreateMessageDto) {
+    const call = this.calls.get(data.id_chamado);
     if (call) {
       const sender = this.users.get(client.id);
       if (!sender) {
@@ -111,9 +132,9 @@ export class ChatService {
 
       // Salvar a mensagem no banco de dados (implementar lógica)
       const message = {
-        chatId: data.chatId,
+        chatId: data.id_chamado,
         from: sender.nome,
-        message: data.message,
+        message: data.mensagem,
       };
 
       // Enviar a mensagem para o cliente
@@ -124,12 +145,12 @@ export class ChatService {
         client.to(tech.user.socketId).emit('receiveMessage', message);
       });
 
-      console.log(`Mensagem enviada no chat ${data.chatId}`);
+      console.log(`Mensagem enviada no chat ${data.id_chamado}`);
     }
   }
 
   // Entrar em um chat como visualizador
-  enterChat(client: Socket, chatId: string) {
+  enterChat(client: Socket, chatId: number) {
     const call = this.calls.get(chatId);
     if (call) {
       const user = this.users.get(client.id);
@@ -151,7 +172,7 @@ export class ChatService {
   }
 
   // Sair de um chat
-  leaveChat(client: Socket, chatId: string) {
+  leaveChat(client: Socket, chatId: number) {
     const call = this.calls.get(chatId);
     if (call) {
       call.technicianSockets = call.technicianSockets.filter(
@@ -163,7 +184,7 @@ export class ChatService {
 
   // Fechar um chat
   closeCall(client: Socket, data: CloseCallDto) {
-    const call = this.calls.get(data.chatId);
+    const call = this.calls.get(data.id_chamado);
     if (call) {
       // Notifica o cliente
       client.to(call.clientSocket.socketId).emit('closeCall', data);
@@ -173,8 +194,8 @@ export class ChatService {
         client.to(tech.user.socketId).emit('closeCall', data);
       });
 
-      this.calls.delete(data.chatId);
-      console.log(`Chat ${data.chatId} fechado`);
+      this.calls.delete(data.id_chamado);
+      console.log(`Chat ${data.id_chamado} fechado`);
     }
   }
 }

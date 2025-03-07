@@ -1,5 +1,5 @@
 export class AcceptCallDto {
-  chatId: string;
+  chatId: number;
   technicianId: string;
   technicianName: string;
 }

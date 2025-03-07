@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ChamadosRepository } from './chamados.repository';
+import { Chamado } from './interface/chamado.interface';
 
 @Injectable()
 export class ChamadosService {
@@ -7,14 +8,18 @@ export class ChamadosService {
   async findChamadosByCnpjAndOperador(
     cnpj: string,
     idOperador: string,
-  ): Promise<any> {
+  ): Promise<Chamado[]> {
     return await this.chamadosRepository.findChamadosByCnpjAndOperador(
       cnpj,
       idOperador,
     );
   }
 
-  async findChamadosByStatusOpen(): Promise<any> {
+  async findChamadosByStatusOpen(): Promise<Chamado[]> {
     return await this.chamadosRepository.findChamadosByStatusOpen();
+  }
+
+  async findChamadosByNomeTecnico(idTecnico: string): Promise<Chamado[]> {
+    return await this.chamadosRepository.findChamadosByNomeTecnico(idTecnico);
   }
 }

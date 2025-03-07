@@ -11,4 +11,11 @@ export class ChatController {
 
     return Array.from(data.values());
   }
+
+  @Get('/calls')
+  async getCalls() {
+    const data = await this.chatService.getCalls();
+
+    return Array.from(data.values());
+  }
 }

@@ -3,4 +3,5 @@ export interface User {
   cnpj?: string;
   socketId: string;
   type: 'TECNICO' | 'OPERADOR';
+  id?: string;
 }

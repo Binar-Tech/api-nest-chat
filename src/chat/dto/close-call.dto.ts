@@ -1,3 +1,3 @@
 export class CloseCallDto {
-  chatId: string;
+  id_chamado: number;
 }

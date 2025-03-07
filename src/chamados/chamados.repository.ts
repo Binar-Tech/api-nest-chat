@@ -30,13 +30,33 @@ export class ChamadosRepository {
     return result;
   }
 
-  //busca acessos com IDN_BIONOTIFICA = S
   async findChamadosByStatusOpen(): Promise<Chamado[]> {
     //const db = this.connectionService.getMainDatabase();
     const result = await new Promise<Chamado[]>((resolve, reject) => {
       this.db.query(
         'SELECT * FROM CHAMADOS WHERE STATUS = ?',
         ['ABERTO'],
+        (err, result) => {
+          if (err) return reject(err);
+          const plained = plainToInstance(Chamado, result, {
+            excludeExtraneousValues: true,
+          });
+          resolve(result); // Confirmando o tipo explicitamente
+        },
+      );
+    });
+
+    return result.map((chamado) => new ReturnChamadoDto(chamado));
+  }
+
+  async findChamadosByNomeTecnico(
+    tecnicoResponsavel: string,
+  ): Promise<Chamado[]> {
+    //const db = this.connectionService.getMainDatabase();
+    const result = await new Promise<Chamado[]>((resolve, reject) => {
+      this.db.query(
+        'SELECT * FROM CHAMADOS WHERE TECNICO_RESPONSAVEL = ? AND STATUS = ?',
+        [tecnicoResponsavel, 'ABERTO'],
         (err, result) => {
           if (err) return reject(err);
           const plained = plainToInstance(Chamado, result, {

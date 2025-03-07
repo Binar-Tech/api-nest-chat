@@ -6,11 +6,11 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { CreateMessageDto } from 'src/messages/dto/create-message.dto';
 import { ChatService } from './chat.service';
 import { AcceptCallDto } from './dto/accept-call.dto';
 import { CloseCallDto } from './dto/close-call.dto';
 import { LoginDto } from './dto/login.dto';
-import { MessageDto } from './dto/message.dto';
 
 @WebSocketGateway({
   cors: {
@@ -51,7 +51,7 @@ export class ChatGateway {
   // Enviar uma mensagem
   @SubscribeMessage('sendMessage')
   handleSendMessage(
-    @MessageBody() data: MessageDto,
+    @MessageBody() data: CreateMessageDto,
     @ConnectedSocket() client: Socket,
   ) {
     this.chatService.sendMessage(client, data);
@@ -60,7 +60,7 @@ export class ChatGateway {
   // Entrar em um chat como visualizador
   @SubscribeMessage('enterChat')
   handleEnterChat(
-    @MessageBody() data: { chatId: string },
+    @MessageBody() data: { chatId: number },
     @ConnectedSocket() client: Socket,
   ) {
     this.chatService.enterChat(client, data.chatId);
@@ -69,7 +69,7 @@ export class ChatGateway {
   // Sair de um chat
   @SubscribeMessage('leaveChat')
   handleLeaveChat(
-    @MessageBody() data: { chatId: string },
+    @MessageBody() data: { chatId: number },
     @ConnectedSocket() client: Socket,
   ) {
     this.chatService.leaveChat(client, data.chatId);
