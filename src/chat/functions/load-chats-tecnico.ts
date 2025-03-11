@@ -49,16 +49,27 @@ async function loadChatOperador(
     user.id!,
   );
 
-  // Percorrendo os chamados e inserindo no Map
-
-  const existingCall = callsMap.get(call.id_chamado);
-  if (existingCall && call) {
-    callsMap.set(existingCall.id_chamado, {
-      id_chamado: existingCall.id_chamado,
-      clientSocket: existingCall.clientSocket,
-      technicianSockets: existingCall.technicianSockets, // Garante que não seja undefined
-    });
+  if (!call) {
+    console.warn('Nenhum chamado encontrado para o usuário:', user.id);
+    return callsMap; // Retorna o mapa inalterado
   }
 
-  return null;
+  // Verifica se já existe o chamado no Map
+  let existingCall = callsMap.get(call.id_chamado);
+
+  if (!existingCall) {
+    existingCall = {
+      id_chamado: call.id_chamado,
+      clientSocket: null, // Defina um valor inicial adequado
+      technicianSockets: [], // Inicializa o Set vazio
+    };
+  }
+
+  // Atualiza o Map com os dados do chamado
+  callsMap.set(call.id_chamado, {
+    id_chamado: call.id_chamado,
+    clientSocket: user || null,
+  });
+
+  return callsMap;
 }
