@@ -69,4 +69,26 @@ export class ChamadosRepository {
 
     return result.map((chamado) => new ReturnChamadoDto(chamado));
   }
+
+  async findChamadosByOperadorAndCnpj(
+    tecnicoResponsavel: string,
+    cnpj: string,
+  ): Promise<Chamado[]> {
+    //const db = this.connectionService.getMainDatabase();
+    const result = await new Promise<Chamado[]>((resolve, reject) => {
+      this.db.query(
+        'SELECT * FROM CHAMADOS WHERE NOME_OPERADOR = ? AND STATUS = ? AND CNPJ_OPERADOR = ?',
+        [tecnicoResponsavel, 'ABERTO', cnpj],
+        (err, result) => {
+          if (err) return reject(err);
+          const plained = plainToInstance(Chamado, result, {
+            excludeExtraneousValues: true,
+          });
+          resolve(result); // Confirmando o tipo explicitamente
+        },
+      );
+    });
+
+    return result.map((chamado) => new ReturnChamadoDto(chamado));
+  }
 }

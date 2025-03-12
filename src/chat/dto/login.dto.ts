@@ -1,6 +1,8 @@
+import { PerfilEnum } from '../enums/perfil.enum';
+
 export class LoginDto {
   nome: string;
   cnpj?: string;
-  type: 'OPERADOR' | 'TECNICO';
+  type: PerfilEnum;
   id: string;
 }

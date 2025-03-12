@@ -1,4 +1,5 @@
 import { ChamadosService } from 'src/chamados/chamados.service';
+import { PerfilEnum } from '../enums/perfil.enum';
 import { CallUser } from '../interface/call-user.intarface';
 import { Call } from '../interface/call.interface';
 import { User } from '../interface/user.interface';
@@ -8,7 +9,7 @@ export async function loadChats(
   user: User,
   callsMap: Map<number, Call>,
 ): Promise<Map<number, Call>> {
-  if (user.type === 'TECNICO') {
+  if (user.type === PerfilEnum.TECNICO) {
     return await loadChatsTecnico(chamadoService, user, callsMap);
   } else {
     return await loadChatOperador(chamadoService, user, callsMap);
@@ -30,9 +31,10 @@ async function loadChatsTecnico(
   // Percorrendo os chamados e inserindo no Map
   for (const call of callsArray) {
     const existingCall = callsMap.get(call.id_chamado);
+
     callsMap.set(call.id_chamado, {
       id_chamado: existingCall.id_chamado,
-      clientSocket: user,
+      clientSocket: existingCall.clientSocket ?? null,
       technicianSockets: [...(existingCall?.technicianSockets ?? []), callUser], // Garante que não seja undefined
     });
   }
@@ -69,6 +71,7 @@ async function loadChatOperador(
   callsMap.set(call.id_chamado, {
     id_chamado: call.id_chamado,
     clientSocket: user || null,
+    technicianSockets: existingCall.technicianSockets || [],
   });
 
   return callsMap;
