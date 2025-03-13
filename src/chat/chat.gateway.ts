@@ -49,7 +49,7 @@ export class ChatGateway {
   }
 
   // Enviar uma mensagem
-  @SubscribeMessage('sendMessage')
+  @SubscribeMessage('message')
   handleSendMessage(
     @MessageBody() data: CreateMessageDto,
     @ConnectedSocket() client: Socket,

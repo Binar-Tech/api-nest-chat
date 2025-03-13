@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
 import { ChamadosService } from 'src/chamados/chamados.service';
+import { ReturnChamadoDto } from 'src/chamados/dtos/returnChamado.dto';
 import { CreateMessageDto } from 'src/messages/dto/create-message.dto';
 import { AcceptCallDto } from './dto/accept-call.dto';
 import { CloseCallDto } from './dto/close-call.dto';
@@ -18,10 +19,12 @@ export class ChatService {
     this.initialize();
   }
   private async initialize() {
-    const calls = await this.chamadosService.findChamadosByStatusOpen();
+    const calls = (await this.chamadosService.findChamadosByStatusOpen()).map(
+      (call) => new ReturnChamadoDto(call),
+    );
     calls.map((call) => {
       const called: Call = {
-        id_chamado: call.id_chamado,
+        chamado: call,
         clientSocket: null,
         technicianSockets: [],
       };
@@ -61,8 +64,20 @@ export class ChatService {
 
     this.users.set(client.id, user);
 
-    await loadChats(this.chamadosService, user, this.calls);
+    const call = await loadChats(this.chamadosService, user, this.calls);
     console.log(`Usuário logado: ${data.nome} (${client.id})`);
+
+    // Notificar apenas os usuários dentro das chamadas ativas
+    if (call) {
+      //notifica o próprio usuario retoronando o id da call
+      client.emit('logged', call);
+
+      if (call.technicianSockets.length > 0) {
+        call.technicianSockets.forEach((tecnico) => {
+          client.to(tecnico.user.socketId).emit('logged', call);
+        });
+      }
+    }
   }
 
   // Iniciar um novo chat
@@ -79,7 +94,7 @@ export class ChatService {
 
     // Cria uma nova chamada
     this.calls.set(chatId, {
-      id_chamado: 1,
+      chamado: null,
       clientSocket: user, // Armazena o usuário (cliente) que iniciou o chat
       technicianSockets: [], // Lista de técnicos/observadores
     });
@@ -124,26 +139,19 @@ export class ChatService {
   sendMessage(client: Socket, data: CreateMessageDto) {
     const call = this.calls.get(data.id_chamado);
     if (call) {
-      const sender = this.users.get(client.id);
-      if (!sender) {
-        console.log('Remetente não encontrado.');
-        return;
-      }
-
       // Salvar a mensagem no banco de dados (implementar lógica)
-      const message = {
-        chatId: data.id_chamado,
-        from: sender.nome,
-        message: data.mensagem,
-      };
 
       // Enviar a mensagem para o cliente
-      client.to(call.clientSocket.socketId).emit('receiveMessage', message);
+      if (call.clientSocket) {
+        client.emit('new-message', data);
+      }
 
       // Enviar a mensagem para todos os técnicos do chat
-      call.technicianSockets.forEach((tech) => {
-        client.to(tech.user.socketId).emit('receiveMessage', message);
-      });
+      if (call.technicianSockets.length > 0) {
+        call.technicianSockets.forEach((tecnico) => {
+          client.to(tecnico.user.socketId).emit('new-message', data);
+        });
+      }
 
       console.log(`Mensagem enviada no chat ${data.id_chamado}`);
     }

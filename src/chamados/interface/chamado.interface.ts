@@ -33,4 +33,22 @@ export class Chamado {
 
   @Expose()
   id_ticket: string;
+
+  @Expose()
+  fantasia: string;
+
+  @Expose()
+  razao_social: string;
+
+  @Expose()
+  servico: string;
+
+  @Expose()
+  celular: string;
+
+  @Expose()
+  email: string;
+
+  @Expose()
+  telefone: string;
 }

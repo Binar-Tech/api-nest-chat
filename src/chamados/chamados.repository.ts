@@ -1,6 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
-import { ReturnChamadoDto } from './dtos/returnChamado.dto';
 import { Chamado } from './interface/chamado.interface';
 
 @Injectable()
@@ -34,7 +33,7 @@ export class ChamadosRepository {
     //const db = this.connectionService.getMainDatabase();
     const result = await new Promise<Chamado[]>((resolve, reject) => {
       this.db.query(
-        'SELECT * FROM CHAMADOS WHERE STATUS = ?',
+        'SELECT C.*, E.FANTASIA, E.RAZAO_SOCIAL, E.SERVICO, E.CELULAR, E.EMAIL, E.TELEFONE FROM CHAMADOS C LEFT JOIN EMPRESA E ON E.CNPJ = C.CNPJ_OPERADOR WHERE STATUS = ?',
         ['ABERTO'],
         (err, result) => {
           if (err) return reject(err);
@@ -46,7 +45,7 @@ export class ChamadosRepository {
       );
     });
 
-    return result.map((chamado) => new ReturnChamadoDto(chamado));
+    return result;
   }
 
   async findChamadosByNomeTecnico(
@@ -67,7 +66,7 @@ export class ChamadosRepository {
       );
     });
 
-    return result.map((chamado) => new ReturnChamadoDto(chamado));
+    return result;
   }
 
   async findChamadosByOperadorAndCnpj(
@@ -89,6 +88,6 @@ export class ChamadosRepository {
       );
     });
 
-    return result.map((chamado) => new ReturnChamadoDto(chamado));
+    return result;
   }
 }

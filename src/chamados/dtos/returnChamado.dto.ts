@@ -1,4 +1,5 @@
 import { Chamado } from '../interface/chamado.interface';
+import { EmpresaDto } from './empresa.dto';
 
 export class ReturnChamadoDto {
   id_chamado: number;
@@ -12,6 +13,7 @@ export class ReturnChamadoDto {
   status: string;
   link_operador: string;
   id_ticket: string;
+  empresa: EmpresaDto;
 
   constructor(chamado: Chamado) {
     this.id_chamado = chamado.id_chamado;
@@ -25,5 +27,6 @@ export class ReturnChamadoDto {
     this.status = chamado.status;
     this.link_operador = chamado.link_operador;
     this.id_ticket = chamado.id_ticket;
+    this.empresa = new EmpresaDto(chamado);
   }
 }
