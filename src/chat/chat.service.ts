@@ -3,9 +3,11 @@ import { Socket } from 'socket.io';
 import { ChamadosService } from 'src/chamados/chamados.service';
 import { ReturnChamadoDto } from 'src/chamados/dtos/returnChamado.dto';
 import { CreateMessageDto } from 'src/messages/dto/create-message.dto';
+import { MessagesService } from 'src/messages/messages.service';
 import { AcceptCallDto } from './dto/accept-call.dto';
 import { CloseCallDto } from './dto/close-call.dto';
 import { LoginDto } from './dto/login.dto';
+import { ReturnMessageSocketDto } from './dto/return-message.dto';
 import { loadChats } from './functions/load-chats-tecnico';
 import { Call } from './interface/call.interface';
 import { User } from './interface/user.interface';
@@ -15,7 +17,10 @@ export class ChatService {
   private users: Map<string, User> = new Map(); // socketId -> User
   private calls: Map<number, Call> = new Map(); // chatId -> Call
 
-  constructor(private readonly chamadosService: ChamadosService) {
+  constructor(
+    private readonly chamadosService: ChamadosService,
+    private readonly messageService: MessagesService,
+  ) {
     this.initialize();
   }
   private async initialize() {
@@ -136,24 +141,29 @@ export class ChatService {
   }
 
   // Enviar uma mensagem
-  sendMessage(client: Socket, data: CreateMessageDto) {
+  async sendMessage(client: Socket, data: CreateMessageDto) {
     const call = this.calls.get(data.id_chamado);
     if (call) {
       // Salvar a mensagem no banco de dados (implementar lógica)
+      const result = await this.messageService.createMessage(data);
+
+      if (!result) {
+        return;
+      }
+
+      const returnMessage = new ReturnMessageSocketDto(result, data.id_chamado);
 
       // Enviar a mensagem para o cliente
       if (call.clientSocket) {
-        client.emit('new-message', data);
+        client.emit('new-message', returnMessage);
       }
 
       // Enviar a mensagem para todos os técnicos do chat
       if (call.technicianSockets.length > 0) {
         call.technicianSockets.forEach((tecnico) => {
-          client.to(tecnico.user.socketId).emit('new-message', data);
+          client.to(tecnico.user.socketId).emit('new-message', returnMessage);
         });
       }
-
-      console.log(`Mensagem enviada no chat ${data.id_chamado}`);
     }
   }
 

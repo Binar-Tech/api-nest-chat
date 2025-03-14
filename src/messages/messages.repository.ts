@@ -10,12 +10,18 @@ export class MessagesRepository {
   constructor(@Inject('FIREBIRD_CONNECTION') private readonly db: any) {}
 
   //busca mensagem com id_chamado
-  async findMessagesByIdChamado(id_chamado: number): Promise<Message[]> {
+  async findMessagesByIdChamado(
+    id_chamado: number,
+    skip: string,
+    limit: string,
+  ): Promise<Message[]> {
     //const db = this.connectionService.getMainDatabase();
+    //ROWS (:limit * (:skyp - 1)) + 1 TO (:limit * :skyp)`,
     const result = await new Promise<Message[]>((resolve, reject) => {
       this.db.query(
-        'SELECT * FROM MENSAGENS WHERE ID_CHAMADO = ? ORDER BY ID_MENSAGEM DESC',
-        [id_chamado],
+        `SELECT * FROM MENSAGENS WHERE ID_CHAMADO = ? ORDER BY ID_MENSAGEM ASC
+         ROWS (? * (? - 1)) + 1 TO (? * ?)`,
+        [id_chamado, limit ?? 999999, skip ?? 1, limit ?? 999999, skip ?? 1],
         (err, result) => {
           if (err) return reject(err);
           const plained = plainToInstance(Message, result, {

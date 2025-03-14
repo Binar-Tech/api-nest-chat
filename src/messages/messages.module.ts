@@ -8,5 +8,6 @@ import { MessagesService } from './messages.service';
   imports: [DbModule],
   controllers: [MessagesController],
   providers: [MessagesService, MessagesRepository],
+  exports: [MessagesService],
 })
 export class MessagesModule {}

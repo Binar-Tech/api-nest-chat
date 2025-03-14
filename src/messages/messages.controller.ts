@@ -6,7 +6,9 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
+
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { MessagesService } from './messages.service';
@@ -26,8 +28,16 @@ export class MessagesController {
   }
 
   @Get(':id_chamado')
-  findMessagesByIdChamado(@Param('id_chamado') id_chamado: string) {
-    return this.messagesService.findMessagesByIdChamado(+id_chamado);
+  findMessagesByIdChamado(
+    @Param('id_chamado') id_chamado: string,
+    @Query('skip') skip: string = '1',
+    @Query('limit') limit: string = '9999',
+  ) {
+    return this.messagesService.findMessagesByIdChamado(
+      +id_chamado,
+      skip,
+      limit,
+    );
   }
 
   @Patch(':id')

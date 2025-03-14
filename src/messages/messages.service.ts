@@ -17,8 +17,14 @@ export class MessagesService {
 
   async findMessagesByIdChamado(
     id_chamado: number,
+    skip: string,
+    limit: string,
   ): Promise<ReturnMessageDto[]> {
-    return await this.messageRepository.findMessagesByIdChamado(id_chamado);
+    return await this.messageRepository.findMessagesByIdChamado(
+      id_chamado,
+      skip,
+      limit,
+    );
   }
 
   update(id: number, updateMessageDto: UpdateMessageDto) {
