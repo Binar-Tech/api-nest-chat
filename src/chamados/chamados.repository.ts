@@ -48,6 +48,25 @@ export class ChamadosRepository {
     return result;
   }
 
+  async findChamadosById(idChamado: number): Promise<Chamado[]> {
+    //const db = this.connectionService.getMainDatabase();
+    const result = await new Promise<Chamado[]>((resolve, reject) => {
+      this.db.query(
+        'SELECT C.*, E.FANTASIA, E.RAZAO_SOCIAL, E.SERVICO, E.CELULAR, E.EMAIL, E.TELEFONE FROM CHAMADOS C LEFT JOIN EMPRESA E ON E.CNPJ = C.CNPJ_OPERADOR WHERE ID_CHAMADO = ?',
+        [idChamado],
+        (err, result) => {
+          if (err) return reject(err);
+          const plained = plainToInstance(Chamado, result, {
+            excludeExtraneousValues: true,
+          });
+          resolve(result); // Confirmando o tipo explicitamente
+        },
+      );
+    });
+
+    return result;
+  }
+
   async findChamadosByNomeTecnico(
     tecnicoResponsavel: string,
   ): Promise<Chamado[]> {
@@ -78,6 +97,30 @@ export class ChamadosRepository {
       this.db.query(
         'SELECT * FROM CHAMADOS WHERE NOME_OPERADOR = ? AND STATUS = ? AND CNPJ_OPERADOR = ?',
         [tecnicoResponsavel, 'ABERTO', cnpj],
+        (err, result) => {
+          if (err) return reject(err);
+          const plained = plainToInstance(Chamado, result, {
+            excludeExtraneousValues: true,
+          });
+          resolve(result); // Confirmando o tipo explicitamente
+        },
+      );
+    });
+
+    return result;
+  }
+
+  async updateChamadoById(
+    idChamado: number,
+    idTecnico: string,
+  ): Promise<Chamado[]> {
+    //const db = this.connectionService.getMainDatabase();
+    const result = await new Promise<Chamado[]>((resolve, reject) => {
+      this.db.query(
+        `UPDATE CHAMADOS SET TECNICO_RESPONSAVEL = ? WHERE ID_CHAMADO = ?
+        RETURNING ID_CHAMADO, TECNICO_RESPONSAVEL, NOME_OPERADOR, CNPJ_OPERADOR, CONTATO, ID_OPERADOR, 
+        DATA_ABERTURA, DATA_FECHAMENTO, STATUS, LINK_OPERADOR, ID_TICKET`,
+        [idTecnico, idTecnico],
         (err, result) => {
           if (err) return reject(err);
           const plained = plainToInstance(Chamado, result, {

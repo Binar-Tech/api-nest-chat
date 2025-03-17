@@ -5,6 +5,9 @@ import { AppService } from './app.service';
 import { ChamadosModule } from './chamados/chamados.module';
 import { ChatModule } from './chat/chat.module';
 import { DbModule } from './db/db.module';
+import { FtpController } from './ftp/ftp.controller';
+import { FtpModule } from './ftp/ftp.module';
+import { FtpService } from './ftp/ftp.service';
 import { MessagesModule } from './messages/messages.module';
 
 @Module({
@@ -17,8 +20,9 @@ import { MessagesModule } from './messages/messages.module';
     ChamadosModule,
     DbModule,
     MessagesModule,
+    FtpModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [AppController, FtpController],
+  providers: [AppService, FtpService],
 })
 export class AppModule {}

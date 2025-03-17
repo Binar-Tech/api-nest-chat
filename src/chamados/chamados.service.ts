@@ -23,6 +23,10 @@ export class ChamadosService {
     return await this.chamadosRepository.findChamadosByNomeTecnico(idTecnico);
   }
 
+  async findChamadosByiD(idChamado: number): Promise<Chamado[]> {
+    return await this.chamadosRepository.findChamadosById(idChamado);
+  }
+
   async findChamadosByOperadorAndCnpj(
     nomeOperador: string,
     cnpj: string,
@@ -30,6 +34,16 @@ export class ChamadosService {
     return await this.chamadosRepository.findChamadosByOperadorAndCnpj(
       nomeOperador,
       cnpj,
+    );
+  }
+
+  async updateChamadoById(
+    idChamado: number,
+    idTecnico: string,
+  ): Promise<Chamado[]> {
+    return await this.chamadosRepository.updateChamadoById(
+      idChamado,
+      idTecnico,
     );
   }
 }

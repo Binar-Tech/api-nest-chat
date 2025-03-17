@@ -8,6 +8,7 @@ import { AcceptCallDto } from './dto/accept-call.dto';
 import { CloseCallDto } from './dto/close-call.dto';
 import { LoginDto } from './dto/login.dto';
 import { ReturnMessageSocketDto } from './dto/return-message.dto';
+import { PerfilEnum } from './enums/perfil.enum';
 import { loadChats } from './functions/load-chats-tecnico';
 import { Call } from './interface/call.interface';
 import { User } from './interface/user.interface';
@@ -115,14 +116,25 @@ export class ChatService {
   }
 
   // Aceitar um chat
-  acceptCall(client: Socket, data: AcceptCallDto) {
+  async acceptCall(client: Socket, data: AcceptCallDto) {
     const call = this.calls.get(data.chatId);
     if (call) {
       const technician = this.users.get(client.id);
-      if (!technician || technician.type !== 'TECNICO') {
+      if (!technician || technician.type !== PerfilEnum.TECNICO) {
         console.log('Apenas técnicos podem aceitar chamadas.');
         return;
       }
+
+      await this.chamadosService.updateChamadoById(
+        data.chatId,
+        data.technicianId,
+      );
+
+      const returnCall = await this.chamadosService.findChamadosByiD(
+        data.chatId,
+      );
+
+      const retorno = returnCall.map((e) => new ReturnChamadoDto(e));
 
       // Adiciona o técnico à chamada como "OWNER"
       call.technicianSockets.push({
@@ -131,7 +143,7 @@ export class ChatService {
       });
 
       // Notifica o cliente que o técnico aceitou o chat
-      client.to(call.clientSocket.socketId).emit('chatAccepted', {
+      client.to(call.clientSocket.socketId).emit('call-accepted', {
         chatId: data.chatId,
         technicianId: technician.socketId,
       });
@@ -155,13 +167,21 @@ export class ChatService {
 
       // Enviar a mensagem para o cliente
       if (call.clientSocket) {
-        client.emit('new-message', returnMessage);
+        if (returnMessage.remetente === PerfilEnum.OPERADOR)
+          client.emit('new-message', returnMessage);
+        else
+          client
+            .to(call.clientSocket.socketId)
+            .emit('new-message', returnMessage);
       }
 
       // Enviar a mensagem para todos os técnicos do chat
       if (call.technicianSockets.length > 0) {
         call.technicianSockets.forEach((tecnico) => {
-          client.to(tecnico.user.socketId).emit('new-message', returnMessage);
+          if (client.id === tecnico.user.socketId)
+            client.emit('new-message', returnMessage);
+          else
+            client.to(tecnico.user.socketId).emit('new-message', returnMessage);
         });
       }
     }

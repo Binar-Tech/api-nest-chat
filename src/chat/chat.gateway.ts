@@ -40,7 +40,7 @@ export class ChatGateway {
   }
 
   // Aceitar um chat
-  @SubscribeMessage('acceptCall')
+  @SubscribeMessage('accept-call')
   handleAcceptCall(
     @MessageBody() data: AcceptCallDto,
     @ConnectedSocket() client: Socket,
