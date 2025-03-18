@@ -1,6 +1,7 @@
 import { ChamadosService } from 'src/chamados/chamados.service';
 import { ReturnChamadoDto } from 'src/chamados/dtos/returnChamado.dto';
 import { PerfilEnum } from '../enums/perfil.enum';
+import { RoleEnum } from '../enums/role.enum';
 import { CallUser } from '../interface/call-user.intarface';
 import { Call } from '../interface/call.interface';
 import { User } from '../interface/user.interface';
@@ -25,7 +26,7 @@ async function loadChatsTecnico(
   const callsArray = await chamadoService.findChamadosByNomeTecnico(user.id!);
 
   const callUser: CallUser = {
-    role: 'OWNER',
+    role: RoleEnum.OWNER,
     user,
   };
 

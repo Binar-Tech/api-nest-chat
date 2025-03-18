@@ -10,6 +10,7 @@ import { CreateMessageDto } from 'src/messages/dto/create-message.dto';
 import { ChatService } from './chat.service';
 import { AcceptCallDto } from './dto/accept-call.dto';
 import { CloseCallDto } from './dto/close-call.dto';
+import { EnterChatDto } from './dto/enter-chat.dto';
 import { LoginDto } from './dto/login.dto';
 
 @WebSocketGateway({
@@ -58,21 +59,21 @@ export class ChatGateway {
   }
 
   // Entrar em um chat como visualizador
-  @SubscribeMessage('enterChat')
+  @SubscribeMessage('enter-call')
   handleEnterChat(
-    @MessageBody() data: { chatId: number },
+    @MessageBody() data: EnterChatDto,
     @ConnectedSocket() client: Socket,
   ) {
-    this.chatService.enterChat(client, data.chatId);
+    this.chatService.enterChat(client, data);
   }
 
   // Sair de um chat
-  @SubscribeMessage('leaveChat')
+  @SubscribeMessage('leave-call')
   handleLeaveChat(
-    @MessageBody() data: { chatId: number },
+    @MessageBody() data: EnterChatDto,
     @ConnectedSocket() client: Socket,
   ) {
-    this.chatService.leaveChat(client, data.chatId);
+    this.chatService.leaveChat(client, data);
   }
 
   // Fechar um chat

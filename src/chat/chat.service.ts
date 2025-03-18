@@ -1,14 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
 import { ChamadosService } from 'src/chamados/chamados.service';
-import { ReturnChamadoDto } from 'src/chamados/dtos/returnChamado.dto';
 import { CreateMessageDto } from 'src/messages/dto/create-message.dto';
 import { MessagesService } from 'src/messages/messages.service';
 import { AcceptCallDto } from './dto/accept-call.dto';
 import { CloseCallDto } from './dto/close-call.dto';
+import { EnterChatDto } from './dto/enter-chat.dto';
 import { LoginDto } from './dto/login.dto';
 import { ReturnMessageSocketDto } from './dto/return-message.dto';
 import { PerfilEnum } from './enums/perfil.enum';
+import { RoleEnum } from './enums/role.enum';
+import { acceptCall, EnterCall, LeaveCall } from './functions/calls';
+
+import { ReturnAcceptCallDto } from './dto/return-accept-call.dto';
 import { loadChats } from './functions/load-chats-tecnico';
 import { Call } from './interface/call.interface';
 import { User } from './interface/user.interface';
@@ -25,9 +29,7 @@ export class ChatService {
     this.initialize();
   }
   private async initialize() {
-    const calls = (await this.chamadosService.findChamadosByStatusOpen()).map(
-      (call) => new ReturnChamadoDto(call),
-    );
+    const calls = await this.chamadosService.findChamadosByStatusOpen();
     calls.map((call) => {
       const called: Call = {
         chamado: call,
@@ -56,6 +58,16 @@ export class ChatService {
       this.users.delete(client.id);
       console.log(`Usuário desconectado: ${user.nome} (${client.id})`);
     }
+
+    //remover o user de calls
+    this.calls.forEach((call) => {
+      const index = call.technicianSockets.findIndex(
+        (socket) => socket.user.socketId === client.id,
+      );
+      if (index !== -1) {
+        call.technicianSockets.splice(index, 1);
+      }
+    });
   }
 
   // Login de um usuário
@@ -125,28 +137,39 @@ export class ChatService {
         return;
       }
 
+      //atualiza o chamado no banco de dados
       await this.chamadosService.updateChamadoById(
         data.chatId,
         data.technicianId,
       );
 
-      const returnCall = await this.chamadosService.findChamadosByiD(
-        data.chatId,
+      //busca o chamado no banco para retornar atualizado para o cliente
+      const chamado = new ReturnAcceptCallDto(
+        await this.chamadosService.findChamadosByiD(data.chatId),
+        technician.nome,
       );
 
-      const retorno = returnCall.map((e) => new ReturnChamadoDto(e));
+      //busca os dados do user logado
+      const user = this.users.get(client.id);
 
       // Adiciona o técnico à chamada como "OWNER"
-      call.technicianSockets.push({
-        user: technician,
-        role: 'OWNER',
-      });
+      acceptCall(user, data.chatId, chamado, this.calls);
+      //remove todos outros tecnicos que não seja owner
+      LeaveCall(user, data.chatId, this.calls);
 
       // Notifica o cliente que o técnico aceitou o chat
-      client.to(call.clientSocket.socketId).emit('call-accepted', {
-        chatId: data.chatId,
-        technicianId: technician.socketId,
-      });
+      if (call.clientSocket) {
+        client.to(call.clientSocket.socketId).emit('accepted-call', chamado);
+      }
+
+      // Enviar a mensagem para todos os técnicos do chat
+      if (call.technicianSockets.length > 0) {
+        call.technicianSockets.forEach((tecnico) => {
+          if (client.id === tecnico.user.socketId)
+            client.emit('accepted-call', chamado);
+          else client.to(tecnico.user.socketId).emit('accepted-call', chamado);
+        });
+      }
 
       console.log(`Chat ${data.chatId} aceito pelo técnico ${technician.nome}`);
     }
@@ -188,35 +211,53 @@ export class ChatService {
   }
 
   // Entrar em um chat como visualizador
-  enterChat(client: Socket, chatId: number) {
-    const call = this.calls.get(chatId);
+  enterChat(client: Socket, message: EnterChatDto) {
+    const call = this.calls.get(message.chatId);
     if (call) {
       const user = this.users.get(client.id);
-      if (!user || user.type !== 'TECNICO') {
+      if (!user || user.type !== PerfilEnum.TECNICO) {
         console.log('Apenas técnicos podem entrar como visualizadores.');
         return;
       }
 
-      // Adiciona o técnico à chamada como "OBSERVER"
-      call.technicianSockets.push({
-        user,
-        role: 'OBSERVER',
-      });
+      // Adiciona o técnico à chamada como "OBSERVER" ou "SUPPORT"
+      EnterCall(user, message.chatId, message.role, this.calls);
+
+      if (message.role === RoleEnum.OBSERVER) {
+        console.log(
+          `Técnico ${user.nome} entrou no chat ${message.chatId} como ${message.role}.`,
+        );
+        return;
+      }
+
+      if (call.clientSocket) {
+        client.to(call.clientSocket.socketId).emit('entered-call', user.nome);
+      }
+
+      // Enviar a mensagem para todos os técnicos do chat
+      if (call.technicianSockets.length > 0) {
+        call.technicianSockets.forEach((tecnico) => {
+          if (client.id === tecnico.user.socketId)
+            client.emit('entered-call', user.nome);
+          else client.to(tecnico.user.socketId).emit('entered-call', user.nome);
+        });
+      }
 
       console.log(
-        `Técnico ${user.nome} entrou no chat ${chatId} como visualizador.`,
+        `Técnico ${user.nome} entrou no chat ${message.chatId} como ${message.role}.`,
       );
     }
   }
 
   // Sair de um chat
-  leaveChat(client: Socket, chatId: number) {
-    const call = this.calls.get(chatId);
+  leaveChat(client: Socket, message: EnterChatDto) {
+    const call = this.calls.get(message.chatId);
     if (call) {
-      call.technicianSockets = call.technicianSockets.filter(
-        (tech) => tech.user.socketId !== client.id,
-      );
-      console.log(`Usuário ${client.id} saiu do chat ${chatId}`);
+      const user = this.users.get(client.id);
+
+      LeaveCall(user, message.chatId, this.calls);
+
+      console.log(`Usuário ${client.id} saiu do chat ${message.chatId}`);
     }
   }
 

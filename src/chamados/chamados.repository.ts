@@ -48,7 +48,7 @@ export class ChamadosRepository {
     return result;
   }
 
-  async findChamadosById(idChamado: number): Promise<Chamado[]> {
+  async findChamadosById(idChamado: number): Promise<Chamado> {
     //const db = this.connectionService.getMainDatabase();
     const result = await new Promise<Chamado[]>((resolve, reject) => {
       this.db.query(
@@ -64,7 +64,7 @@ export class ChamadosRepository {
       );
     });
 
-    return result;
+    return result[0];
   }
 
   async findChamadosByNomeTecnico(
@@ -113,14 +113,14 @@ export class ChamadosRepository {
   async updateChamadoById(
     idChamado: number,
     idTecnico: string,
-  ): Promise<Chamado[]> {
+  ): Promise<Chamado> {
     //const db = this.connectionService.getMainDatabase();
-    const result = await new Promise<Chamado[]>((resolve, reject) => {
+    const result = await new Promise<Chamado>((resolve, reject) => {
       this.db.query(
         `UPDATE CHAMADOS SET TECNICO_RESPONSAVEL = ? WHERE ID_CHAMADO = ?
         RETURNING ID_CHAMADO, TECNICO_RESPONSAVEL, NOME_OPERADOR, CNPJ_OPERADOR, CONTATO, ID_OPERADOR, 
         DATA_ABERTURA, DATA_FECHAMENTO, STATUS, LINK_OPERADOR, ID_TICKET`,
-        [idTecnico, idTecnico],
+        [idTecnico, idChamado],
         (err, result) => {
           if (err) return reject(err);
           const plained = plainToInstance(Chamado, result, {
@@ -131,6 +131,6 @@ export class ChamadosRepository {
       );
     });
 
-    return result;
+    return result[0];
   }
 }
