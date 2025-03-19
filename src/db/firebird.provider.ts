@@ -1,34 +1,33 @@
 import { Provider } from '@nestjs/common';
 import * as Firebird from 'node-firebird';
 
-//Configurações de conexão com o Firebird
+// Configurações de conexão com o Firebird
 const options = {
-  host: '187.73.185.68',
-  //host: '187.73.185.69',
-  port: 3050,
-  database: '/SEC/BANCO/WSACESSO/WSACESSO.FDB',
-  user: 'SYSDBA',
-  password: 'masterkey',
+  host: process.env.HOST || '10.0.1.38',
+  port: Number(process.env.PORT) || 3050,
+  database:
+    process.env.DATABASE ||
+    'D:/Trabalho/Controle Banco/Biofinger/Banco/ticket.fdb',
+  user: process.env.DB_USER || 'SYSDBA',
+  password: process.env.DB_PASSWORD || 'masterkey',
   retryConnectionInterval: 1000,
   blobAsText: true,
   lowercase_keys: true,
 };
 
+// Criando o pool de conexões
+const pool = Firebird.pool(10, options); // Definindo 10 conexões no pool
+
 export const FirebirdProvider: Provider = {
   provide: 'FIREBIRD_CONNECTION',
   useFactory: (): Promise<Firebird.Database> => {
-    const database = process.env.DATABASE;
-    const host = process.env.HOST;
-    const port = Number(process.env.PORT);
-    options.database = database;
-    options.host = host;
-    options.port = port;
-    console.log('database:', options);
     return new Promise((resolve, reject) => {
-      Firebird.attach(options, (err, db) => {
+      pool.get((err, db) => {
         if (err) {
+          console.error('Erro ao obter conexão do pool:', err);
           reject(err);
         } else {
+          console.log('Conexão Firebird obtida do pool');
           resolve(db);
         }
       });

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
 import { ChamadosService } from 'src/chamados/chamados.service';
 import { CreateMessageDto } from 'src/messages/dto/create-message.dto';
@@ -23,12 +23,13 @@ export class ChatService {
   private calls: Map<number, Call> = new Map(); // chatId -> Call
 
   constructor(
+    @Inject(forwardRef(() => ChamadosService))
     private readonly chamadosService: ChamadosService,
     private readonly messageService: MessagesService,
   ) {
-    this.initialize();
+    this.listCalls();
   }
-  private async initialize() {
+  private async listCalls() {
     const calls = await this.chamadosService.findChamadosByStatusOpen();
     calls.map((call) => {
       const called: Call = {
@@ -262,7 +263,7 @@ export class ChatService {
   }
 
   // Fechar um chat
-  closeCall(client: Socket, data: CloseCallDto) {
+  closeChat(client: Socket, data: CloseCallDto) {
     const call = this.calls.get(data.id_chamado);
     if (call) {
       // Notifica o cliente

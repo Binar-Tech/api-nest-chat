@@ -1,3 +1,4 @@
+import { forwardRef, Inject } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -7,22 +8,25 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { CreateMessageDto } from 'src/messages/dto/create-message.dto';
-import { ChatService } from './chat.service';
-import { AcceptCallDto } from './dto/accept-call.dto';
-import { CloseCallDto } from './dto/close-call.dto';
-import { EnterChatDto } from './dto/enter-chat.dto';
-import { LoginDto } from './dto/login.dto';
+import { ChatService } from '../chat/chat.service';
+import { AcceptCallDto } from '../chat/dto/accept-call.dto';
+import { CloseCallDto } from '../chat/dto/close-call.dto';
+import { EnterChatDto } from '../chat/dto/enter-chat.dto';
+import { LoginDto } from '../chat/dto/login.dto';
 
 @WebSocketGateway({
   cors: {
     origin: '*', // Permite conexões de qualquer origem (ajuste conforme necessário)
   },
 })
-export class ChatGateway {
+export class Gateway {
   @WebSocketServer()
   server: Server;
 
-  constructor(private readonly chatService: ChatService) {}
+  constructor(
+    @Inject(forwardRef(() => ChatService))
+    private readonly chatService: ChatService,
+  ) {}
 
   // Conexão de um usuário
   handleConnection(@ConnectedSocket() client: Socket) {
@@ -82,7 +86,7 @@ export class ChatGateway {
     @MessageBody() data: CloseCallDto,
     @ConnectedSocket() client: Socket,
   ) {
-    this.chatService.closeCall(client, data);
+    //this.chatService.closeChat(client, data);
   }
 
   // Login de um usuário

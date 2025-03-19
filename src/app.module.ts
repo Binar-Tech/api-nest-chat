@@ -9,6 +9,8 @@ import { FtpController } from './ftp/ftp.controller';
 import { FtpModule } from './ftp/ftp.module';
 import { FtpService } from './ftp/ftp.service';
 import { MessagesModule } from './messages/messages.module';
+import { BlacklistModule } from './blacklist/blacklist.module';
+import { GatewayModule } from './gateway/gateway.module';
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { MessagesModule } from './messages/messages.module';
     DbModule,
     MessagesModule,
     FtpModule,
+    BlacklistModule,
+    GatewayModule,
   ],
   controllers: [AppController, FtpController],
   providers: [AppService, FtpService],

@@ -1,10 +1,37 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
+import { getActualDateTimeFormattedToFirebird } from 'src/utils/date-utils';
+import { CreateChamadoDto } from './dtos/create-chamado.dto';
 import { Chamado } from './interface/chamado.interface';
 
 @Injectable()
 export class ChamadosRepository {
   constructor(@Inject('FIREBIRD_CONNECTION') private readonly db: any) {}
+
+  async createChamado(chamado: CreateChamadoDto): Promise<Chamado> {
+    //const db = this.connectionService.getMainDatabase();
+    const date = getActualDateTimeFormattedToFirebird();
+    const result = await new Promise<Chamado[]>((resolve, reject) => {
+      this.db.query(
+        `insert into CHAMADOS (NOME_OPERADOR, CNPJ_OPERADOR, CONTATO, ID_OPERADOR,
+                      DATA_ABERTURA, DATA_FECHAMENTO, STATUS, LINK_OPERADOR)
+            values (:NOME_OPERADOR, :CNPJ_OPERADOR, :CONTATO, :ID_OPERADOR, :DATA_ABERTURA,
+                    :DATA_FECHAMENTO, :STATUS, :LINK_OPERADOR)
+            returning ID_CHAMADO
+            into :ID_CHAMADO`,
+        [],
+        (err, result) => {
+          if (err) return reject(err);
+          const plained = plainToInstance(Chamado, result, {
+            excludeExtraneousValues: true,
+          });
+          resolve(result); // Confirmando o tipo explicitamente
+        },
+      );
+    });
+
+    return result[0] || null;
+  }
 
   //busca acessos com IDN_BIONOTIFICA = S
   async findChamadosByCnpjAndOperador(
@@ -131,6 +158,27 @@ export class ChamadosRepository {
       );
     });
 
-    return result[0];
+    return result;
+  }
+
+  async updateChamadoSetToClosed(idChamado: number): Promise<Chamado> {
+    //const db = this.connectionService.getMainDatabase();
+    const result = await new Promise<Chamado>((resolve, reject) => {
+      this.db.query(
+        `UPDATE CHAMADOS SET STATUS = ? WHERE ID_CHAMADO = ?
+        RETURNING ID_CHAMADO, TECNICO_RESPONSAVEL, NOME_OPERADOR, CNPJ_OPERADOR, CONTATO, ID_OPERADOR, 
+        DATA_ABERTURA, DATA_FECHAMENTO, STATUS, LINK_OPERADOR, ID_TICKET`,
+        ['FECHADO', idChamado],
+        (err, result) => {
+          if (err) return reject(err);
+          const plained = plainToInstance(Chamado, result, {
+            excludeExtraneousValues: true,
+          });
+          resolve(result); // Confirmando o tipo explicitamente
+        },
+      );
+    });
+
+    return result;
   }
 }
