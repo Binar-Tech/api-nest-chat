@@ -11,10 +11,6 @@ export class MessagesService {
     return await this.messageRepository.createMessage(createMessageDto);
   }
 
-  findAll() {
-    return `This action returns all messages`;
-  }
-
   async findMessagesByIdChamado(
     id_chamado: number,
     skip: string,
@@ -22,6 +18,22 @@ export class MessagesService {
   ): Promise<ReturnMessageDto[]> {
     return await this.messageRepository.findMessagesByIdChamado(
       id_chamado,
+      skip,
+      limit,
+    );
+  }
+
+  async findMessagesByCnpjAndOperadorAndIdMessage(
+    cnpj: string,
+    id_mensagem: number,
+    operador: string,
+    skip: string,
+    limit: string,
+  ): Promise<ReturnMessageDto[]> {
+    return await this.messageRepository.findMessagesByCnpjAndOperadorAndIdMessage(
+      id_mensagem,
+      cnpj,
+      operador,
       skip,
       limit,
     );

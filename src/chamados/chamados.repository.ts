@@ -11,26 +11,35 @@ export class ChamadosRepository {
   async createChamado(chamado: CreateChamadoDto): Promise<Chamado> {
     //const db = this.connectionService.getMainDatabase();
     const date = getActualDateTimeFormattedToFirebird();
-    const result = await new Promise<Chamado[]>((resolve, reject) => {
+    const params = [
+      chamado.nome_operador,
+      chamado.cnpj_operador,
+      chamado.contato,
+      chamado.id_operador,
+      date,
+      null,
+      'ABERTO',
+      chamado.link_operador || null,
+    ];
+    const result = await new Promise<Chamado>((resolve, reject) => {
       this.db.query(
         `insert into CHAMADOS (NOME_OPERADOR, CNPJ_OPERADOR, CONTATO, ID_OPERADOR,
                       DATA_ABERTURA, DATA_FECHAMENTO, STATUS, LINK_OPERADOR)
-            values (:NOME_OPERADOR, :CNPJ_OPERADOR, :CONTATO, :ID_OPERADOR, :DATA_ABERTURA,
-                    :DATA_FECHAMENTO, :STATUS, :LINK_OPERADOR)
-            returning ID_CHAMADO
-            into :ID_CHAMADO`,
-        [],
+            values (?, ?, ?, ?, ?, ?, ?, ?)
+            returning ID_CHAMADO, TECNICO_RESPONSAVEL, NOME_OPERADOR, CNPJ_OPERADOR, CONTATO, ID_OPERADOR,
+            DATA_ABERTURA, DATA_FECHAMENTO, STATUS, LINK_OPERADOR, ID_TICKET`,
+        params,
         (err, result) => {
           if (err) return reject(err);
           const plained = plainToInstance(Chamado, result, {
             excludeExtraneousValues: true,
-          });
-          resolve(result); // Confirmando o tipo explicitamente
+          }) as Chamado;
+          resolve(plained); // Confirmando o tipo explicitamente
         },
       );
     });
 
-    return result[0] || null;
+    return result || null;
   }
 
   //busca acessos com IDN_BIONOTIFICA = S

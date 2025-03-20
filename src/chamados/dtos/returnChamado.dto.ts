@@ -16,17 +16,21 @@ export class ReturnChamadoDto {
   empresa: EmpresaDto;
 
   constructor(chamado: Chamado) {
-    this.id_chamado = chamado.id_chamado;
-    this.tecnico_responsavel = chamado.tecnico_responsavel;
-    this.cnpj_operador = chamado.cnpj_operador;
-    this.nome_operador = chamado.nome_operador;
-    this.contato = chamado.contato;
-    this.id_operador = chamado.id_operador;
-    this.data_abertura = chamado.data_abertura;
-    this.data_fechamento = chamado.data_fechamento;
-    this.status = chamado.status;
-    this.link_operador = chamado.link_operador;
-    this.id_ticket = chamado.id_ticket;
-    this.empresa = new EmpresaDto(chamado);
+    if (chamado) {
+      this.id_chamado = chamado.id_chamado;
+      this.tecnico_responsavel = chamado.tecnico_responsavel;
+      this.cnpj_operador = chamado.cnpj_operador;
+      this.nome_operador = chamado.nome_operador;
+      this.contato = chamado.contato;
+      this.id_operador = chamado.id_operador;
+      this.data_abertura = chamado.data_abertura;
+      this.data_fechamento = chamado.data_fechamento;
+      this.status = chamado.status;
+      this.link_operador = chamado.link_operador;
+      this.id_ticket = chamado.id_ticket;
+      this.empresa = new EmpresaDto(chamado);
+    } else {
+      return null;
+    }
   }
 }

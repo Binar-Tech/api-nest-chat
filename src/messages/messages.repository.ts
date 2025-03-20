@@ -19,9 +19,47 @@ export class MessagesRepository {
     //ROWS (:limit * (:skyp - 1)) + 1 TO (:limit * :skyp)`,
     const result = await new Promise<Message[]>((resolve, reject) => {
       this.db.query(
-        `SELECT * FROM MENSAGENS WHERE ID_CHAMADO = ? ORDER BY ID_MENSAGEM ASC
+        `SELECT * FROM MENSAGENS WHERE ID_CHAMADO = ? ORDER BY ID_MENSAGEM DESC
          ROWS (? * (? - 1)) + 1 TO (? * ?)`,
         [id_chamado, limit ?? 999999, skip ?? 1, limit ?? 999999, skip ?? 1],
+        (err, result) => {
+          if (err) return reject(err);
+          const plained = plainToInstance(Message, result, {
+            excludeExtraneousValues: true,
+          });
+          resolve(result); // Confirmando o tipo explicitamente
+        },
+      );
+    });
+
+    return result.map((chamado) => new ReturnMessageDto(chamado));
+  }
+
+  async findMessagesByCnpjAndOperadorAndIdMessage(
+    id_mensagem: number,
+    cnpj: string,
+    operador: string,
+    skip: string,
+    limit: string,
+  ): Promise<Message[]> {
+    //const db = this.connectionService.getMainDatabase();
+    //ROWS (:limit * (:skyp - 1)) + 1 TO (:limit * :skyp)`,
+    const result = await new Promise<Message[]>((resolve, reject) => {
+      this.db.query(
+        `SELECT * FROM MENSAGENS WHERE CNPJ = ? 
+         AND OPERADOR = ?
+         AND ID_MENSAGEM < ? 
+         ORDER BY ID_MENSAGEM ASC
+         ROWS (? * (? - 1)) + 1 TO (? * ?)`,
+        [
+          cnpj,
+          operador,
+          id_mensagem,
+          limit ?? 999999,
+          skip ?? 1,
+          limit ?? 999999,
+          skip ?? 1,
+        ],
         (err, result) => {
           if (err) return reject(err);
           const plained = plainToInstance(Message, result, {

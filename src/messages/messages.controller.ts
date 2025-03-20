@@ -22,11 +22,6 @@ export class MessagesController {
     return await this.messagesService.createMessage(createMessageDto);
   }
 
-  @Get()
-  findAll() {
-    return this.messagesService.findAll();
-  }
-
   @Get(':id_chamado')
   findMessagesByIdChamado(
     @Param('id_chamado') id_chamado: string,
@@ -35,6 +30,23 @@ export class MessagesController {
   ) {
     return this.messagesService.findMessagesByIdChamado(
       +id_chamado,
+      skip,
+      limit,
+    );
+  }
+
+  @Get('/other')
+  findMessagesByIdChamadoAndFistMessage(
+    @Query('cnpj') cnpj: string,
+    @Query('id_mensagem') id_mensagem: number,
+    @Query('operador') operador: string,
+    @Query('skip') skip: string = '1',
+    @Query('limit') limit: string = '9999',
+  ) {
+    return this.messagesService.findMessagesByCnpjAndOperadorAndIdMessage(
+      cnpj,
+      +id_mensagem,
+      operador,
       skip,
       limit,
     );

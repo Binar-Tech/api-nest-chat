@@ -1,7 +1,9 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { ChatService } from 'src/chat/chat.service';
+import { PerfilEnum } from 'src/chat/enums/perfil.enum';
 import { Gateway } from 'src/gateway/gateway';
 import { ChamadosRepository } from './chamados.repository';
+import { CreateChamadoDto } from './dtos/create-chamado.dto';
 import { ReturnChamadoDto } from './dtos/returnChamado.dto';
 import { Chamado } from './interface/chamado.interface';
 
@@ -25,8 +27,11 @@ export class ChamadosService {
 
   async findChamadosByStatusOpen(): Promise<ReturnChamadoDto[]> {
     const result = await this.chamadosRepository.findChamadosByStatusOpen();
+    if (result) {
+      return result.map((chamado) => new ReturnChamadoDto(chamado));
+    }
 
-    return result.map((chamado) => new ReturnChamadoDto(chamado));
+    return [];
   }
 
   async findChamadosByNomeTecnico(idTecnico: string): Promise<Chamado[]> {
@@ -74,5 +79,32 @@ export class ChamadosService {
     }
 
     return result;
+  }
+  async createChamado(chamado: CreateChamadoDto): Promise<ReturnChamadoDto> {
+    const retorno = await this.chamadosRepository.createChamado(chamado);
+    let returnChamado = null;
+    if (retorno) {
+      returnChamado = await this.chamadosRepository.findChamadosById(
+        retorno.id_chamado,
+      );
+    }
+    if (returnChamado) {
+      const retornoFormatado = new ReturnChamadoDto(returnChamado);
+      this.chatService.insertCall(retornoFormatado);
+      const userConected = this.chatService.getUsersConnected();
+      if (userConected) {
+        userConected.forEach((user) => {
+          if (user.type === PerfilEnum.TECNICO) {
+            this.gateway.server
+              .to(user.socketId)
+              .emit('open-call', retornoFormatado);
+          }
+        });
+      }
+
+      return retornoFormatado;
+    }
+
+    throw new Error('Erro ao criar chamado');
   }
 }

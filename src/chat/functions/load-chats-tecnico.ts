@@ -48,8 +48,9 @@ async function loadChatOperador(
   user: User,
   callsMap: Map<number, Call>,
 ): Promise<Call> {
-  const call = new ReturnChamadoDto(
-    await chamadoService.findChamadosByCnpjAndOperador(user.cnpj!, user.id!),
+  const call = await chamadoService.findChamadosByCnpjAndOperador(
+    user.cnpj!,
+    user.id!,
   );
 
   if (!call) {
@@ -57,12 +58,14 @@ async function loadChatOperador(
     return null; // Retorna o mapa inalterado
   }
 
+  const returnCall = new ReturnChamadoDto(call);
+
   // Verifica se já existe o chamado no Map
   let existingCall = callsMap.get(call.id_chamado);
 
   // Atualiza o Map com os dados do chamado
   callsMap.set(call.id_chamado, {
-    chamado: call,
+    chamado: returnCall,
     clientSocket: user || null,
     technicianSockets: existingCall.technicianSockets || [],
   });

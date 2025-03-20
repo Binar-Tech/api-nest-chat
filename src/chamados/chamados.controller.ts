@@ -1,14 +1,17 @@
 import {
+  Body,
   Controller,
   Get,
   HttpStatus,
   Param,
   Patch,
+  Post,
   Query,
   Res,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { ChamadosService } from './chamados.service';
+import { CreateChamadoDto } from './dtos/create-chamado.dto';
 
 @Controller('chamados')
 export class ChamadosController {
@@ -72,4 +75,17 @@ export class ChamadosController {
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
+  @Post()
+  async createChamado(
+    @Body() createChamadoDto: CreateChamadoDto, // Extrai corretamente do corpo
+    @Res() res: Response,
+  ) {
+    try {
+      const result = await this.chamadosService.createChamado(createChamadoDto);
+      return res.status(HttpStatus.CREATED).json(result);
+    } catch (error) {
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  } // Indica explicitamente que estamos usando Response
 }

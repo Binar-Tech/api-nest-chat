@@ -12,6 +12,7 @@ import { PerfilEnum } from './enums/perfil.enum';
 import { RoleEnum } from './enums/role.enum';
 import { acceptCall, EnterCall, LeaveCall } from './functions/calls';
 
+import { ReturnChamadoDto } from 'src/chamados/dtos/returnChamado.dto';
 import { ReturnAcceptCallDto } from './dto/return-accept-call.dto';
 import { loadChats } from './functions/load-chats-tecnico';
 import { Call } from './interface/call.interface';
@@ -46,6 +47,14 @@ export class ChatService {
 
   getCalls(): Map<number, Call> {
     return this.calls;
+  }
+
+  insertCall(chamado: ReturnChamadoDto) {
+    this.calls.set(chamado.id_chamado, {
+      chamado,
+      clientSocket: null,
+      technicianSockets: [],
+    });
   }
   // Conexão de um usuário
   handleConnection(client: Socket) {
@@ -86,14 +95,17 @@ export class ChatService {
     const call = await loadChats(this.chamadosService, user, this.calls);
     console.log(`Usuário logado: ${data.nome} (${client.id})`);
 
-    // Notificar apenas os usuários dentro das chamadas ativas
-    if (call) {
-      //notifica o próprio usuario retoronando o id da call
+    // Enviar a mensagem para o cliente
+    if (user.type === PerfilEnum.OPERADOR) {
       client.emit('logged', call);
+    }
 
+    // Enviar a mensagem para todos os técnicos do chat
+    if (call) {
       if (call.technicianSockets.length > 0) {
         call.technicianSockets.forEach((tecnico) => {
-          client.to(tecnico.user.socketId).emit('logged', call);
+          if (client.id === tecnico.user.socketId) client.emit('logged', call);
+          else client.to(tecnico.user.socketId).emit('logged', call);
         });
       }
     }
