@@ -46,20 +46,14 @@ export class MessagesRepository {
     //ROWS (:limit * (:skyp - 1)) + 1 TO (:limit * :skyp)`,
     const result = await new Promise<Message[]>((resolve, reject) => {
       this.db.query(
-        `SELECT * FROM MENSAGENS WHERE CNPJ = ? 
-         AND OPERADOR = ?
-         AND ID_MENSAGEM < ? 
-         ORDER BY ID_MENSAGEM ASC
-         ROWS (? * (? - 1)) + 1 TO (? * ?)`,
-        [
-          cnpj,
-          operador,
-          id_mensagem,
-          limit ?? 999999,
-          skip ?? 1,
-          limit ?? 999999,
-          skip ?? 1,
-        ],
+        `SELECT M.* FROM MENSAGENS M 
+         LEFT JOIN CHAMADOS C ON M.ID_CHAMADO = C.ID_CHAMADO
+         WHERE C.CNPJ_OPERADOR = ?
+         AND C.ID_OPERADOR = ?
+         AND M.ID_MENSAGEM < ? 
+         ORDER BY M.ID_MENSAGEM DESC
+         ROWS 1 TO ?`,
+        [cnpj, operador, id_mensagem, limit ?? 999999],
         (err, result) => {
           if (err) return reject(err);
           const plained = plainToInstance(Message, result, {
