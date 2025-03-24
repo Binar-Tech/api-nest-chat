@@ -46,9 +46,11 @@ export function EnterCall(
     (existingUser) => existingUser.user.socketId === user.socketId,
   );
 
-  if (alreadyExists) {
+  if (alreadyExists && role === RoleEnum.OWNER) {
     return; // Se o usuário já está na chamada, não faz nada
   }
+
+  //remover e insrir novamente o user conforme o role
 
   // Se não existir, adiciona o usuário na chamada
   callsMap.set(idChamado, {

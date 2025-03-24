@@ -8,13 +8,19 @@ import { Client } from 'basic-ftp';
 import { Cache } from 'cache-manager';
 import { createHash } from 'crypto';
 import * as fs from 'fs';
+import { unlink } from 'fs/promises';
 import * as mime from 'mime-types';
 import * as path from 'path';
+import { ChatService } from 'src/chat/chat.service';
+import { CreateMessageDto } from 'src/messages/dto/create-message.dto';
 import { PassThrough } from 'stream';
 
 @Injectable()
 export class FtpService {
-  constructor(@Inject(CACHE_MANAGER) private cache: Cache) {}
+  constructor(
+    @Inject(CACHE_MANAGER) private cache: Cache,
+    private readonly chatService: ChatService,
+  ) {}
 
   private async connectFtp() {
     const client = new Client();
@@ -31,30 +37,43 @@ export class FtpService {
     try {
       const cacheKey = createHash('md5').update(filePath).digest('hex');
       const cachedData = await this.cache.get<Buffer>(cacheKey);
+      const mimeType = mime.lookup(filePath) || 'application/octet-stream';
 
       if (cachedData) {
         console.log('Servindo do cache.');
-        res.setHeader(
-          'Content-Type',
-          mime.lookup(filePath) || 'application/octet-stream',
-        );
+        res.setHeader('Content-Type', mimeType);
+
+        // Se não for imagem ou vídeo, define o cabeçalho para download
+        if (!mimeType.startsWith('image') && !mimeType.startsWith('video')) {
+          res.setHeader(
+            'Content-Disposition',
+            `attachment; filename="${filePath.split('/').pop()}"`,
+          );
+        }
+
         res.send(cachedData);
         return;
       }
 
       const client = await this.connectFtp();
       const passThroughStream = new PassThrough();
-      res.setHeader(
-        'Content-Type',
-        mime.lookup(filePath) || 'application/octet-stream',
-      );
+      res.setHeader('Content-Type', mimeType);
+
+      // Define o cabeçalho de download apenas se não for imagem ou vídeo
+      if (!mimeType.startsWith('image') && !mimeType.startsWith('video')) {
+        res.setHeader(
+          'Content-Disposition',
+          `attachment; filename="${filePath.split('/').pop()}"`,
+        );
+      }
+
       passThroughStream.pipe(res);
 
       let data: Buffer[] = [];
       passThroughStream.on('data', (chunk) => data.push(chunk));
       passThroughStream.on('end', () => {
         const buffer = Buffer.concat(data);
-        this.cache.set(cacheKey, buffer);
+        this.cache.set(cacheKey, buffer, 60000 * 120); // Cache de 2 horas
       });
 
       await client.downloadTo(passThroughStream, filePath);
@@ -62,6 +81,41 @@ export class FtpService {
     } catch (error) {
       console.error('Erro ao acessar o FTP:', error.message);
       throw new InternalServerErrorException('Erro ao acessar o FTP.');
+    }
+  }
+
+  async uploadFile(
+    file: Express.Multer.File,
+    body: string,
+    cnpj: string,
+  ): Promise<CreateMessageDto> {
+    try {
+      if (!file) {
+        throw new InternalServerErrorException('Arquivo não enviado.');
+      }
+
+      const dados: CreateMessageDto = JSON.parse(body);
+
+      const client = await this.connectFtp();
+      const remotePath = `${cnpj}/${file.filename}`;
+
+      // Faz o upload do arquivo para o FTP
+      await client.uploadFrom(file.path, remotePath);
+      client.close();
+
+      // Remove o arquivo do servidor após upload
+      await unlink(file.path);
+
+      dados.caminho_arquivo_ftp = cnpj;
+      dados.nome_arquivo = file.filename;
+      dados.mensagem = null;
+
+      return dados;
+    } catch (error) {
+      console.error('Erro no upload do arquivo', error.message);
+      throw new InternalServerErrorException(
+        'Erro ao fazer upload para o FTP.',
+      );
     }
   }
 

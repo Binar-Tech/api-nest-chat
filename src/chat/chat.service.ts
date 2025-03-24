@@ -192,6 +192,13 @@ export class ChatService {
   async sendMessage(client: Socket, data: CreateMessageDto) {
     const call = this.calls.get(data.id_chamado);
     if (call) {
+      this.calls.get(data.id_chamado).technicianSockets.forEach((tech) => {
+        if (tech.user.socketId === client.id) {
+          if (tech.role === RoleEnum.OWNER || tech.role === RoleEnum.SUPPORT) {
+            return;
+          }
+        }
+      });
       // Salvar a mensagem no banco de dados (implementar lógica)
       const result = await this.messageService.createMessage(data);
 

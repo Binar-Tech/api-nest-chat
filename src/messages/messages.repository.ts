@@ -77,11 +77,14 @@ export class MessagesRepository {
         message.mensagem,
         message.remetente,
         message.tecnico_responsavel || null,
+        message.nome_arquivo || null,
+        message.caminho_arquivo_ftp || null,
       ];
       this.db.query(
-        `insert into MENSAGENS (ID_CHAMADO, "DATA", MENSAGEM, REMETENTE, TECNICO_RESPONSAVEL)
-        values (?, ?, ?, ?, ?)
-        returning ID_MENSAGEM, "DATA", MENSAGEM, NOME_ARQUIVO, CAMINHO_ARQUIVO_FTP, REMETENTE, ID_TECNICO, TECNICO_RESPONSAVEL
+        `insert into MENSAGENS (ID_CHAMADO, "DATA", MENSAGEM, REMETENTE, TECNICO_RESPONSAVEL, NOME_ARQUIVO, CAMINHO_ARQUIVO_FTP)
+        values (?, ?, ?, ?, ?, ?, ?)
+        returning ID_MENSAGEM, "DATA", MENSAGEM, NOME_ARQUIVO, CAMINHO_ARQUIVO_FTP, REMETENTE, ID_TECNICO, TECNICO_RESPONSAVEL,
+        NOME_ARQUIVO, CAMINHO_ARQUIVO_FTP
         `,
         params,
         (err, result) => {
