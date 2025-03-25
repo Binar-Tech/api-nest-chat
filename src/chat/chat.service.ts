@@ -10,9 +10,11 @@ import { LoginDto } from './dto/login.dto';
 import { ReturnMessageSocketDto } from './dto/return-message.dto';
 import { PerfilEnum } from './enums/perfil.enum';
 import { RoleEnum } from './enums/role.enum';
-import { acceptCall, EnterCall, LeaveCall } from './functions/calls';
+import { acceptCall, EnterCall, ExitCall, LeaveCall } from './functions/calls';
 
+import { BlacklistService } from 'src/blacklist/blacklist.service';
 import { ReturnChamadoDto } from 'src/chamados/dtos/returnChamado.dto';
+import { RoleService } from 'src/role/role.service';
 import { ReturnAcceptCallDto } from './dto/return-accept-call.dto';
 import { loadChats } from './functions/load-chats-tecnico';
 import { Call } from './interface/call.interface';
@@ -27,6 +29,8 @@ export class ChatService {
     @Inject(forwardRef(() => ChamadosService))
     private readonly chamadosService: ChamadosService,
     private readonly messageService: MessagesService,
+    private readonly blacklistService: BlacklistService,
+    private readonly roleService: RoleService,
   ) {
     this.listCalls();
   }
@@ -88,7 +92,24 @@ export class ChatService {
       socketId: client.id,
       type: data.type,
       id: data.id,
+      blacklist: [],
+      tipo_usuario: [],
     };
+
+    if (user.type === PerfilEnum.TECNICO) {
+      const list = await this.blacklistService.findBlacklistByIdTecnico(
+        data.id,
+      );
+
+      if (list) {
+        user.blacklist = list;
+      }
+
+      const tipoUsuario = await this.roleService.findOne(data.id);
+      if (tipoUsuario) {
+        user.tipo_usuario = tipoUsuario;
+      }
+    }
 
     this.users.set(client.id, user);
 
@@ -100,12 +121,18 @@ export class ChatService {
       client.emit('logged', call);
     }
 
+    if (user.type === PerfilEnum.TECNICO) {
+      client.emit('user', user);
+    }
+
     // Enviar a mensagem para todos os técnicos do chat
     if (call) {
       if (call.technicianSockets.length > 0) {
         call.technicianSockets.forEach((tecnico) => {
-          if (client.id === tecnico.user.socketId) client.emit('logged', call);
-          else client.to(tecnico.user.socketId).emit('logged', call);
+          if (client.id === tecnico.user.socketId) {
+            client.emit('logged', call);
+            client.emit('user', user);
+          } else client.to(tecnico.user.socketId).emit('logged', call);
         });
       }
     }
@@ -275,7 +302,20 @@ export class ChatService {
     if (call) {
       const user = this.users.get(client.id);
 
-      LeaveCall(user, message.chatId, this.calls);
+      ExitCall(user, message.chatId, this.calls, message.role);
+
+      if (call.clientSocket) {
+        client.to(call.clientSocket.socketId).emit('leaved-call', user.nome);
+      }
+
+      // Enviar a mensagem para todos os técnicos do chat
+      if (call.technicianSockets.length > 0) {
+        call.technicianSockets.forEach((tecnico) => {
+          if (client.id === tecnico.user.socketId)
+            client.emit('entered-call', user.nome);
+          else client.to(tecnico.user.socketId).emit('leaved-call', user.nome);
+        });
+      }
 
       console.log(`Usuário ${client.id} saiu do chat ${message.chatId}`);
     }

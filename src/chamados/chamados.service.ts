@@ -66,15 +66,16 @@ export class ChamadosService {
     const result =
       await this.chamadosRepository.updateChamadoSetToClosed(idChamado);
     const call = this.chatService.getCalls().get(idChamado);
+    const usersConnected = this.chatService.getUsersConnected();
     if (call) {
       this.gateway.server
         .to(call.clientSocket.socketId)
         .emit('closed-call', result);
 
-      call.technicianSockets.map((tecnico) => {
-        this.gateway.server
-          .to(tecnico.user.socketId)
-          .emit('closed-call', result);
+      usersConnected.forEach((user) => {
+        if (user.type === PerfilEnum.TECNICO) {
+          this.gateway.server.to(user.socketId).emit('closed-call', result);
+        }
       });
     }
 

@@ -1,26 +1,25 @@
-import { Injectable } from '@nestjs/common';
-import { CreateBlacklistDto } from './dto/create-blacklist.dto';
-import { UpdateBlacklistDto } from './dto/update-blacklist.dto';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Inject, Injectable } from '@nestjs/common';
+import { Cache } from 'cache-manager';
+import { createHash } from 'crypto';
+import { BlacklistRepository } from './blacklist.repository';
 
 @Injectable()
 export class BlacklistService {
-  create(createBlacklistDto: CreateBlacklistDto) {
-    return 'This action adds a new blacklist';
-  }
+  constructor(
+    @Inject(CACHE_MANAGER) private cache: Cache,
+    private readonly repo: BlacklistRepository,
+  ) {}
+  async findBlacklistByIdTecnico(idTecnico: string): Promise<Array<string>> {
+    const cacheKey = createHash('md5').update(idTecnico).digest('hex');
+    const cachedData = await this.cache.get<Array<string>>(cacheKey);
+    if (cachedData) {
+      console.log('Servindo do cache.');
 
-  findAll() {
-    return `This action returns all blacklist`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} blacklist`;
-  }
-
-  update(id: number, updateBlacklistDto: UpdateBlacklistDto) {
-    return `This action updates a #${id} blacklist`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} blacklist`;
+      return cachedData;
+    }
+    const data = await this.repo.findBlacklistByIdTecnico(idTecnico);
+    await this.cache.set(cacheKey, data, 60000);
+    return data;
   }
 }

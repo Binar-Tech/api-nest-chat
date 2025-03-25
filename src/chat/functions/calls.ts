@@ -42,15 +42,20 @@ export function EnterCall(
   }
 
   // Verifica se já existe um usuário com o mesmo socketId em technicianSockets
-  const alreadyExists = existingCall.technicianSockets.some(
+  const alreadyExists = existingCall.technicianSockets.find(
     (existingUser) => existingUser.user.socketId === user.socketId,
   );
 
-  if (alreadyExists && role === RoleEnum.OWNER) {
+  if (alreadyExists && alreadyExists.role !== RoleEnum.OBSERVER) {
     return; // Se o usuário já está na chamada, não faz nada
   }
 
   //remover e insrir novamente o user conforme o role
+  existingCall.technicianSockets.forEach((existingUser, index) => {
+    if (existingUser.user.id === user.id) {
+      existingCall.technicianSockets.splice(index, 1);
+    }
+  });
 
   // Se não existir, adiciona o usuário na chamada
   callsMap.set(idChamado, {
@@ -74,13 +79,50 @@ export async function LeaveCall(
   // Filtra os usuários removendo aquele que tem o mesmo socketId, mas mantendo os que são OWNER
   const updatedTechnicianSockets = existingCall.technicianSockets.filter(
     (existingUser) =>
-      existingUser.user.socketId !== user.socketId ||
-      existingUser.role === RoleEnum.OWNER,
+      existingUser.user.id !== user.id ||
+      existingUser.role !== RoleEnum.OBSERVER,
   );
 
   callsMap.set(idChamado, {
     chamado: existingCall.chamado,
     clientSocket: existingCall.clientSocket ?? null,
     technicianSockets: updatedTechnicianSockets, // Atualiza a lista sem o usuário removido
+  });
+}
+
+//essa função e chamada com o user após entrar em um chat, quer sair dele.
+export async function ExitCall(
+  user: User,
+  idChamado: number,
+  callsMap: Map<number, Call>,
+  role: RoleEnum,
+) {
+  const existingCall = callsMap.get(idChamado);
+
+  if (!existingCall) {
+    return; // Se a chamada não existir, não faz nada
+  }
+
+  // Verifica se já existe um usuário com o mesmo socketId em technicianSockets
+  const alreadyExists = existingCall.technicianSockets.find(
+    (existingUser) => existingUser.user.socketId === user.socketId,
+  );
+
+  if (alreadyExists && alreadyExists.role === RoleEnum.OWNER) {
+    return; // Se o usuário já está na chamada, não faz nada
+  }
+
+  //remover e insrir novamente o user conforme o role
+  existingCall.technicianSockets.forEach((existingUser, index) => {
+    if (existingUser.user.id === user.id) {
+      existingCall.technicianSockets.splice(index, 1);
+    }
+  });
+
+  // Se não existir, adiciona o usuário na chamada
+  callsMap.set(idChamado, {
+    chamado: existingCall.chamado,
+    clientSocket: existingCall.clientSocket ?? null,
+    technicianSockets: existingCall.technicianSockets, // Adiciona o novo usuário
   });
 }

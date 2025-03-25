@@ -6,4 +6,6 @@ export interface User {
   socketId: string;
   type: PerfilEnum;
   id?: string;
+  blacklist?: Array<string>;
+  tipo_usuario?: Array<string>;
 }
