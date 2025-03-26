@@ -81,6 +81,7 @@ export class ChamadosService {
 
     return result;
   }
+
   async createChamado(chamado: CreateChamadoDto): Promise<ReturnChamadoDto> {
     const retorno = await this.chamadosRepository.createChamado(chamado);
     let returnChamado = null;

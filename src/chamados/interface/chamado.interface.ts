@@ -51,4 +51,10 @@ export class Chamado {
 
   @Expose()
   telefone: string;
+
+  @Expose()
+  name_tecnico: string;
+
+  @Expose()
+  email_tecnico: string;
 }

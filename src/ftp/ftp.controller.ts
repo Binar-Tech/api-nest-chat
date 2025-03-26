@@ -34,7 +34,7 @@ export class FtpController {
     await this.ftpService.getImage(filePath, res);
   }
 
-  @Get('videos')
+  @Get('/videos')
   async getVideo(
     @Query('path') filePath: string,
     @Req() req: Request,

@@ -75,11 +75,22 @@ export class ChatService {
 
     //remover o user de calls
     this.calls.forEach((call) => {
-      const index = call.technicianSockets.findIndex(
-        (socket) => socket.user.socketId === client.id,
-      );
-      if (index !== -1) {
-        call.technicianSockets.splice(index, 1);
+      if (user.type === PerfilEnum.TECNICO) {
+        const index = call.technicianSockets.findIndex(
+          (socket) => socket.user.socketId === client.id,
+        );
+        if (index !== -1) {
+          call.technicianSockets.splice(index, 1);
+        }
+      } else {
+        if (call.clientSocket && call.clientSocket.socketId === client.id) {
+          call.clientSocket = null;
+
+          //enviar notificação para os tecnicos do chamado
+          call.technicianSockets.map((tec) => {
+            client.to(tec.user.socketId).emit('operador_exited', call.chamado);
+          });
+        }
       }
     });
   }
@@ -132,7 +143,7 @@ export class ChatService {
           if (client.id === tecnico.user.socketId) {
             client.emit('logged', call);
             client.emit('user', user);
-          } else client.to(tecnico.user.socketId).emit('logged', call);
+          } else client.to(tecnico.user.socketId).emit('logged', call.chamado);
         });
       }
     }
@@ -203,11 +214,15 @@ export class ChatService {
       }
 
       // Enviar a mensagem para todos os técnicos do chat
-      if (call.technicianSockets.length > 0) {
-        call.technicianSockets.forEach((tecnico) => {
-          if (client.id === tecnico.user.socketId)
-            client.emit('accepted-call', chamado);
-          else client.to(tecnico.user.socketId).emit('accepted-call', chamado);
+      if (this.users) {
+        this.users.forEach((user) => {
+          if (user.type === PerfilEnum.TECNICO) {
+            if (user.socketId === client.id) {
+              client.emit('accepted-call', chamado);
+            } else {
+              client.to(user.socketId).emit('accepted-call', chamado);
+            }
+          }
         });
       }
 
@@ -305,15 +320,15 @@ export class ChatService {
       ExitCall(user, message.chatId, this.calls, message.role);
 
       if (call.clientSocket) {
-        client.to(call.clientSocket.socketId).emit('leaved-call', user.nome);
+        client.to(call.clientSocket.socketId).emit('leaved-call', call);
       }
 
       // Enviar a mensagem para todos os técnicos do chat
       if (call.technicianSockets.length > 0) {
         call.technicianSockets.forEach((tecnico) => {
           if (client.id === tecnico.user.socketId)
-            client.emit('entered-call', user.nome);
-          else client.to(tecnico.user.socketId).emit('leaved-call', user.nome);
+            client.emit('entered-call', call);
+          else client.to(tecnico.user.socketId).emit('leaved-call', call);
         });
       }
 

@@ -1,5 +1,6 @@
 import { Chamado } from '../interface/chamado.interface';
 import { EmpresaDto } from './empresa.dto';
+import { TecnicoDto } from './tecnico.dto';
 
 export class ReturnChamadoDto {
   id_chamado: number;
@@ -14,6 +15,7 @@ export class ReturnChamadoDto {
   link_operador: string;
   id_ticket: string;
   empresa: EmpresaDto;
+  tecnico?: TecnicoDto;
 
   constructor(chamado: Chamado) {
     if (chamado) {
@@ -29,6 +31,10 @@ export class ReturnChamadoDto {
       this.link_operador = chamado.link_operador;
       this.id_ticket = chamado.id_ticket;
       this.empresa = new EmpresaDto(chamado);
+      this.tecnico = new TecnicoDto(
+        chamado.name_tecnico,
+        chamado.email_tecnico,
+      );
     } else {
       return null;
     }
