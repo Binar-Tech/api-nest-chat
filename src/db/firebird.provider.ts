@@ -5,7 +5,7 @@ import * as Firebird from 'node-firebird';
 const options = {
   host: process.env.HOST || '187.73.185.69',
   port: Number(process.env.PORT) || 3050,
-  database: process.env.DATABASE || '/SEC/BANCO/WSACESSO/WSTICKET.FDB',
+  database: process.env.DATABASE || '/SEC/BANCO/WSACESSO/WSACESSO.FDB',
   user: process.env.DB_USER || 'SYSDBA',
   password: process.env.DB_PASSWORD || 'masterkey',
   retryConnectionInterval: 1000,
