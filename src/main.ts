@@ -6,7 +6,7 @@ dotenv.config();
 const corsOptions = {
   origin: '*', // Specify your allowed origins here
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Permite métodos específicos
-  allowedHeaders: '*', // Permite cabeçalhos específicos
+  allowedHeaders: ['Content-Type', 'Authorization', 'Range'], // Permite cabeçalhos específicos
 };
 
 async function bootstrap() {
