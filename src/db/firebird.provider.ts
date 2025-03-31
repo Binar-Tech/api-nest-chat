@@ -3,15 +3,19 @@ import * as Firebird from 'node-firebird';
 
 // Configurações de conexão com o Firebird
 const options = {
-  host: process.env.HOST || '187.73.185.69',
+  host: process.env.HOST || '10.0.1.50',
   port: Number(process.env.PORT) || 3050,
-  database: process.env.DATABASE || '/SEC/BANCO/WSACESSO/WSACESSO.FDB',
+  database:
+    process.env.DATABASE ||
+    'D:/Trabalho/Controle Banco/Biofinger/Banco/ticket.fdb',
   user: process.env.DB_USER || 'SYSDBA',
   password: process.env.DB_PASSWORD || 'masterkey',
   retryConnectionInterval: 1000,
   blobAsText: true,
   lowercase_keys: true,
 };
+
+console.log('Database Config:', options);
 
 // Criando o pool de conexões
 const pool = Firebird.pool(10, options); // Definindo 10 conexões no pool

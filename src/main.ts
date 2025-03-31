@@ -1,7 +1,10 @@
 import { NestFactory } from '@nestjs/core';
 import * as dotenv from 'dotenv';
+import 'dotenv/config';
+import { join } from 'path';
 import { AppModule } from './app.module';
-dotenv.config();
+
+dotenv.config({ path: join(__dirname, '..', '.env') });
 
 const corsOptions = {
   origin: '*', // Specify your allowed origins here
