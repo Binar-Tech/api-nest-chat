@@ -13,6 +13,7 @@ import { GatewayModule } from './gateway/gateway.module';
 import { MessagesModule } from './messages/messages.module';
 import { RoleController } from './role/role.controller';
 import { RoleModule } from './role/role.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { RoleModule } from './role/role.module';
     BlacklistModule,
     GatewayModule,
     RoleModule,
+    AuthModule,
   ],
   controllers: [AppController, FtpController, RoleController],
   providers: [AppService, FtpService],
