@@ -82,6 +82,35 @@ export class ChamadosService {
     return result;
   }
 
+  async updateChamadoSetToClosedWithoutTicket(
+    idChamado: number,
+  ): Promise<Chamado> {
+    const result =
+      await this.chamadosRepository.updateChamadoSetToClosed(idChamado);
+    const call = this.chatService.getCalls().get(idChamado);
+    const usersConnected = this.chatService.getUsersConnected();
+    if (call) {
+      call.technicianSockets.find((c) => c.user.id);
+      this.gateway.server
+        .to(call.clientSocket.socketId)
+        .emit('closed-call', result);
+
+      usersConnected.forEach((user) => {
+        if (user.type === PerfilEnum.TECNICO) {
+          const index = call.technicianSockets.findIndex(
+            (c) => c.user.id === user.id,
+          );
+          //envia para todos os tecnicos, menos para o dono do chamado
+          if (index < 0) {
+            this.gateway.server.to(user.socketId).emit('closed-call', result);
+          }
+        }
+      });
+    }
+
+    return result;
+  }
+
   async createChamado(chamado: CreateChamadoDto): Promise<ReturnChamadoDto> {
     const retorno = await this.chamadosRepository.createChamado(chamado);
     let returnChamado = null;

@@ -12,6 +12,7 @@ import {
 import { Response } from 'express';
 import { ChamadosService } from './chamados.service';
 import { CreateChamadoDto } from './dtos/create-chamado.dto';
+import { ReturnChamadoDto } from './dtos/returnChamado.dto';
 
 @Controller('chamados')
 export class ChamadosController {
@@ -64,12 +65,18 @@ export class ChamadosController {
   @Patch('/withoutticket/:idChamado')
   async updateChamadoSetToClosedWithoutticket(
     @Param('idChamado') idChamado: string,
-    @Param() res: Response,
+    @Res() res: Response,
   ) {
     try {
-      const result = await this.chamadosService.updateChamadoSetToClosed(
-        Number(idChamado),
-      );
+      const result =
+        await this.chamadosService.updateChamadoSetToClosedWithoutTicket(
+          Number(idChamado),
+        );
+      let retorno;
+      if (result) {
+        retorno = new ReturnChamadoDto(result);
+        return res.status(HttpStatus.OK).json(retorno);
+      }
       return res.status(HttpStatus.OK).json(result);
     } catch (error) {
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR);
