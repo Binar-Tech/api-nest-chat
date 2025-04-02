@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'nest-api',
-      script: 'dist/main.js', // Arquivo de saída do build
+      script: 'dist/src/main.js', // Arquivo de saída do build
       cwd: './',
       instances: 'max', // Usa todos os núcleos disponíveis
       exec_mode: 'cluster', // Modo cluster para melhor desempenho
