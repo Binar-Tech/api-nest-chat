@@ -233,14 +233,23 @@ export class ChatService {
   // Enviar uma mensagem
   async sendMessage(client: Socket, data: CreateMessageDto) {
     const call = this.calls.get(data.id_chamado);
+    let cancel = false;
     if (call) {
-      this.calls.get(data.id_chamado).technicianSockets.forEach((tech) => {
-        if (tech.user.socketId === client.id) {
-          if (tech.role === RoleEnum.OWNER || tech.role === RoleEnum.SUPPORT) {
-            return;
+      //VERIFICA SE É TECNICO QUE ESTÁ ENVIANDO A MENSAGEM
+      if (data.remetente === 'TECNICO') {
+        this.calls.get(data.id_chamado).technicianSockets.forEach((tech) => {
+          if (tech.user.socketId === client.id) {
+            if (tech.role === RoleEnum.OBSERVER) {
+              cancel = true;
+            }
           }
-        }
-      });
+        });
+      }
+
+      if (cancel) {
+        return;
+      }
+
       // Salvar a mensagem no banco de dados (implementar lógica)
       const result = await this.messageService.createMessage(data);
 
