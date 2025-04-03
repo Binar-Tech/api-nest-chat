@@ -91,13 +91,17 @@ export class ChamadosRepository {
     //const db = this.connectionService.getMainDatabase();
     const result = await new Promise<Chamado[]>((resolve, reject) => {
       this.db.query(
-        'SELECT C.*, E.FANTASIA, E.RAZAO_SOCIAL, E.SERVICO, E.CELULAR, E.EMAIL, E.TELEFONE FROM CHAMADOS C LEFT JOIN EMPRESA E ON E.CNPJ = C.CNPJ_OPERADOR WHERE ID_CHAMADO = ?',
+        //'SELECT C.*, E.FANTASIA, E.RAZAO_SOCIAL, E.SERVICO, E.CELULAR, E.EMAIL, E.TELEFONE FROM CHAMADOS C LEFT JOIN EMPRESA E ON E.CNPJ = C.CNPJ_OPERADOR WHERE ID_CHAMADO = ?',
+        `SELECT C.*, E.FANTASIA, E.RAZAO_SOCIAL, E.SERVICO, E.CELULAR, E.EMAIL, E.TELEFONE,
+         U.NAME AS NAME_TECNICO, U.EMAIL AS EMAIL_TECNICO 
+         FROM CHAMADOS C 
+         LEFT JOIN EMPRESA E ON E.CNPJ = C.CNPJ_OPERADOR 
+         LEFT JOIN "USER" U ON U.ID = C.TECNICO_RESPONSAVEL
+         WHERE ID_CHAMADO = ?`,
         [idChamado],
         (err, result) => {
           if (err) return reject(err);
-          const plained = plainToInstance(Chamado, result, {
-            excludeExtraneousValues: true,
-          });
+
           resolve(result); // Confirmando o tipo explicitamente
         },
       );

@@ -203,6 +203,8 @@ export class ChatService {
       //busca os dados do user logado
       const user = this.users.get(client.id);
 
+      //chamado.tecnico_responsavel = user.id;
+
       // Adiciona o técnico à chamada como "OWNER"
       acceptCall(user, data.chatId, chamado, this.calls);
       //remove todos outros tecnicos que não seja owner

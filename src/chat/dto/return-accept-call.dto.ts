@@ -1,4 +1,5 @@
 import { EmpresaDto } from 'src/chamados/dtos/empresa.dto';
+import { TecnicoDto } from 'src/chamados/dtos/tecnico.dto';
 import { Chamado } from 'src/chamados/interface/chamado.interface';
 
 export class ReturnAcceptCallDto {
@@ -15,6 +16,7 @@ export class ReturnAcceptCallDto {
   id_ticket: string;
   nome_tecnico: string;
   empresa: EmpresaDto;
+  tecnico?: TecnicoDto;
 
   constructor(chamado: Chamado, nomeTecnico: string) {
     this.id_chamado = chamado.id_chamado;
@@ -30,5 +32,6 @@ export class ReturnAcceptCallDto {
     this.id_ticket = chamado.id_ticket;
     this.empresa = new EmpresaDto(chamado);
     this.nome_tecnico = nomeTecnico;
+    this.tecnico = new TecnicoDto(chamado.name_tecnico, chamado.email_tecnico);
   }
 }
