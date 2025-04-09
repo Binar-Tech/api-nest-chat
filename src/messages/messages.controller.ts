@@ -25,16 +25,15 @@ export class MessagesController {
   @Get('/more-messages')
   findMessagesByIdChamadoAndFistMessage(
     @Query('cnpj') cnpj: string,
-    @Query('id_mensagem') id_mensagem: number,
+    @Query('id_mensagem') id_mensagem: number | null,
     @Query('operador') operador: string,
     @Query('skip') skip: string = '1',
     @Query('limit') limit: string = '10',
   ) {
     return this.messagesService.findMessagesByCnpjAndOperadorAndIdMessage(
       cnpj,
-      +id_mensagem,
+      id_mensagem,
       operador,
-      skip,
       limit,
     );
   }

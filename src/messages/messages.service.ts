@@ -25,17 +25,15 @@ export class MessagesService {
 
   async findMessagesByCnpjAndOperadorAndIdMessage(
     cnpj: string,
-    id_mensagem: number,
+    id_mensagem: number | null,
     operador: string,
     skip: string,
-    limit: string,
   ): Promise<ReturnMessageDto[]> {
     return await this.messageRepository.findMessagesByCnpjAndOperadorAndIdMessage(
       id_mensagem,
       cnpj,
       operador,
       skip,
-      limit,
     );
   }
 

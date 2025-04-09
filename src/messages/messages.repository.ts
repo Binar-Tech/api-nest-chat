@@ -36,14 +36,36 @@ export class MessagesRepository {
   }
 
   async findMessagesByCnpjAndOperadorAndIdMessage(
-    id_mensagem: number,
+    id_mensagem: number | null,
     cnpj: string,
     operador: string,
-    skip: string,
     limit: string,
   ): Promise<Message[]> {
-    //const db = this.connectionService.getMainDatabase();
-    //ROWS (:limit * (:skyp - 1)) + 1 TO (:limit * :skyp)`,
+    let idReferencia = id_mensagem;
+    // 1. Se id_mensagem for null, buscar o maior ID_MENSAGEM desse operador e cnpj
+    if (!id_mensagem) {
+      const result = await new Promise<Message[]>((resolve, reject) => {
+        this.db.query(
+          `SELECT FIRST 1 M.ID_MENSAGEM FROM MENSAGENS M
+            LEFT JOIN CHAMADOS C ON M.ID_CHAMADO = C.ID_CHAMADO
+            WHERE C.CNPJ_OPERADOR = ? AND C.ID_OPERADOR = ?
+            ORDER BY M.ID_MENSAGEM DESC`,
+          [cnpj, operador],
+          (err, result) => {
+            if (err) return reject(err);
+
+            resolve(result); // Confirmando o tipo explicitamente
+          },
+        );
+      });
+
+      if (result) {
+        idReferencia = Number(result[0].id_mensagem);
+      } else {
+        return []; // Nenhuma mensagem encontrada
+      }
+    }
+
     const result = await new Promise<Message[]>((resolve, reject) => {
       this.db.query(
         `SELECT M.* FROM MENSAGENS M 
@@ -53,12 +75,10 @@ export class MessagesRepository {
          AND M.ID_MENSAGEM < ? 
          ORDER BY M.ID_MENSAGEM DESC
          ROWS 1 TO ?`,
-        [cnpj, operador, id_mensagem, limit ?? 999999],
+        [cnpj, operador, idReferencia, limit ?? 999999],
         (err, result) => {
           if (err) return reject(err);
-          const plained = plainToInstance(Message, result, {
-            excludeExtraneousValues: true,
-          });
+
           resolve(result); // Confirmando o tipo explicitamente
         },
       );
