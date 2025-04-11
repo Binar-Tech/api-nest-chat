@@ -14,6 +14,7 @@ import { MessagesModule } from './messages/messages.module';
 import { RoleController } from './role/role.controller';
 import { RoleModule } from './role/role.module';
 import { AuthModule } from './auth/auth.module';
+import { AvaliacaoModule } from './avaliacao/avaliacao.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { AuthModule } from './auth/auth.module';
     GatewayModule,
     RoleModule,
     AuthModule,
+    AvaliacaoModule,
   ],
   controllers: [AppController, FtpController, RoleController],
   providers: [AppService, FtpService],
