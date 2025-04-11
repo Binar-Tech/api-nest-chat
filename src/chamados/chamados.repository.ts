@@ -182,12 +182,10 @@ export class ChamadosRepository {
         `UPDATE CHAMADOS SET STATUS = ? WHERE ID_CHAMADO = ?
         RETURNING ID_CHAMADO, TECNICO_RESPONSAVEL, NOME_OPERADOR, CNPJ_OPERADOR, CONTATO, ID_OPERADOR, 
         DATA_ABERTURA, DATA_FECHAMENTO, STATUS, LINK_OPERADOR, ID_TICKET`,
-        ['FECHADO', idChamado],
+        ['AVALIAR', idChamado],
         (err, result) => {
           if (err) return reject(err);
-          const plained = plainToInstance(Chamado, result, {
-            excludeExtraneousValues: true,
-          });
+
           resolve(result); // Confirmando o tipo explicitamente
         },
       );

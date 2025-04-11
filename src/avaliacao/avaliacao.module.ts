@@ -8,5 +8,6 @@ import { AvaliacaoService } from './avaliacao.service';
   imports: [DbModule],
   controllers: [AvaliacaoController],
   providers: [AvaliacaoService, AvaliacaoRepository],
+  exports: [AvaliacaoService],
 })
 export class AvaliacaoModule {}

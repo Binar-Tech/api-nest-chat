@@ -10,14 +10,6 @@ export class AvaliacaoService {
     return await this.avaliacaoRepository.gerarAvaliacao(idChamado);
   }
 
-  findAll() {
-    return `This action returns all avaliacao`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} avaliacao`;
-  }
-
   async findQuestionsByIdChamado(id: number) {
     const result = await this.avaliacaoRepository.findQuestionsByIdChamado(id);
     if (result.length > 0) {
@@ -31,9 +23,5 @@ export class AvaliacaoService {
       id,
       updateQuestion.nota,
     );
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} avaliacao`;
   }
 }

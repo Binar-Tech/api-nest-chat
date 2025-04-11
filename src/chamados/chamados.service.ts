@@ -1,4 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { AvaliacaoService } from 'src/avaliacao/avaliacao.service';
 import { ChatService } from 'src/chat/chat.service';
 import { PerfilEnum } from 'src/chat/enums/perfil.enum';
 import { Gateway } from 'src/gateway/gateway';
@@ -14,6 +15,7 @@ export class ChamadosService {
     @Inject(forwardRef(() => ChatService))
     private readonly chatService: ChatService,
     private readonly gateway: Gateway,
+    private readonly avaliacaoService: AvaliacaoService,
   ) {}
   async findChamadosByCnpjAndOperador(
     cnpj: string,
@@ -67,6 +69,10 @@ export class ChamadosService {
       await this.chamadosRepository.updateChamadoSetToClosed(idChamado);
     const call = this.chatService.getCalls().get(idChamado);
     const usersConnected = this.chatService.getUsersConnected();
+
+    //GERAR QUESTOES PARA AVALIAÇÃO
+    await this.avaliacaoService.create(idChamado);
+
     if (call) {
       this.gateway.server
         .to(call.clientSocket.socketId)

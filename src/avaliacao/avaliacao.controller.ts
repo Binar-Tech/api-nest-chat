@@ -20,9 +20,7 @@ export class AvaliacaoController {
   }
 
   @Get()
-  findAll() {
-    return this.avaliacaoService.findAll();
-  }
+  findAll() {}
 
   @Get(':id')
   async findQuestionByIdChamado(@Param('id') id: string) {
@@ -38,7 +36,5 @@ export class AvaliacaoController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.avaliacaoService.remove(+id);
-  }
+  remove(@Param('id') id: string) {}
 }
