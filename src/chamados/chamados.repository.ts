@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { getActualDateTimeFormattedToFirebird } from 'src/utils/date-utils';
 import { CreateChamadoDto } from './dtos/create-chamado.dto';
+import { StatusChamadoEnum } from './enum/status-chamado.enum';
 import { Chamado } from './interface/chamado.interface';
 
 @Injectable()
@@ -74,6 +75,28 @@ export class ChamadosRepository {
          LEFT JOIN "USER" U ON U.ID = C.TECNICO_RESPONSAVEL
          WHERE STATUS = ?`,
         ['ABERTO'],
+        (err, result) => {
+          if (err) return reject(err);
+
+          resolve(result); // Confirmando o tipo explicitamente
+        },
+      );
+    });
+
+    return result;
+  }
+
+  async findChamadosByStatusNotClosed(): Promise<Chamado[]> {
+    //const db = this.connectionService.getMainDatabase();
+    const result = await new Promise<Chamado[]>((resolve, reject) => {
+      this.db.query(
+        `SELECT C.*, E.FANTASIA, E.RAZAO_SOCIAL, E.SERVICO, E.CELULAR, E.EMAIL, E.TELEFONE,
+         U.NAME AS NAME_TECNICO, U.EMAIL AS EMAIL_TECNICO 
+         FROM CHAMADOS C 
+         LEFT JOIN EMPRESA E ON E.CNPJ = C.CNPJ_OPERADOR 
+         LEFT JOIN "USER" U ON U.ID = C.TECNICO_RESPONSAVEL
+         WHERE STATUS NOT IN (?)`,
+        ['FECHADO'],
         (err, result) => {
           if (err) return reject(err);
 
@@ -175,16 +198,19 @@ export class ChamadosRepository {
     return result;
   }
 
-  async updateChamadoSetToClosed(idChamado: number): Promise<Chamado> {
+  async updateChamadoSetToClosed(
+    idChamado: number,
+    status: StatusChamadoEnum = StatusChamadoEnum.FECHADO,
+  ): Promise<Chamado> {
     //const db = this.connectionService.getMainDatabase();
     const result = await new Promise<Chamado>((resolve, reject) => {
       this.db.query(
         `UPDATE CHAMADOS SET STATUS = ? WHERE ID_CHAMADO = ?
         RETURNING ID_CHAMADO, TECNICO_RESPONSAVEL, NOME_OPERADOR, CNPJ_OPERADOR, CONTATO, ID_OPERADOR, 
         DATA_ABERTURA, DATA_FECHAMENTO, STATUS, LINK_OPERADOR, ID_TICKET`,
-        ['AVALIAR', idChamado],
+        [status, idChamado],
         (err, result) => {
-          if (err) return reject(err);
+          if (err) reject(err);
 
           resolve(result); // Confirmando o tipo explicitamente
         },

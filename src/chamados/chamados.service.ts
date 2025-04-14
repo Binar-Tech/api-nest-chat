@@ -2,10 +2,12 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { AvaliacaoService } from 'src/avaliacao/avaliacao.service';
 import { ChatService } from 'src/chat/chat.service';
 import { PerfilEnum } from 'src/chat/enums/perfil.enum';
+import { Call } from 'src/chat/interface/call.interface';
 import { Gateway } from 'src/gateway/gateway';
 import { ChamadosRepository } from './chamados.repository';
 import { CreateChamadoDto } from './dtos/create-chamado.dto';
 import { ReturnChamadoDto } from './dtos/returnChamado.dto';
+import { StatusChamadoEnum } from './enum/status-chamado.enum';
 import { Chamado } from './interface/chamado.interface';
 
 @Injectable()
@@ -29,6 +31,16 @@ export class ChamadosService {
 
   async findChamadosByStatusOpen(): Promise<ReturnChamadoDto[]> {
     const result = await this.chamadosRepository.findChamadosByStatusOpen();
+    if (result) {
+      return result.map((chamado) => new ReturnChamadoDto(chamado));
+    }
+
+    return [];
+  }
+
+  async findChamadosByStatusNotClosed(): Promise<ReturnChamadoDto[]> {
+    const result =
+      await this.chamadosRepository.findChamadosByStatusNotClosed();
     if (result) {
       return result.map((chamado) => new ReturnChamadoDto(chamado));
     }
@@ -65,10 +77,16 @@ export class ChamadosService {
   }
 
   async updateChamadoSetToClosed(idChamado: number): Promise<Chamado> {
-    const result =
-      await this.chamadosRepository.updateChamadoSetToClosed(idChamado);
+    const result = await this.chamadosRepository.updateChamadoSetToClosed(
+      idChamado,
+      StatusChamadoEnum.AVALIAR,
+    );
     const call = this.chatService.getCalls().get(idChamado);
     const usersConnected = this.chatService.getUsersConnected();
+
+    if (call) {
+      call.chamado = new ReturnChamadoDto(result);
+    }
 
     //GERAR QUESTOES PARA AVALIAÇÃO
     await this.avaliacaoService.create(idChamado);
@@ -76,7 +94,7 @@ export class ChamadosService {
     if (call) {
       this.gateway.server
         .to(call.clientSocket.socketId)
-        .emit('closed-call', result);
+        .emit('closed-call', call);
 
       usersConnected.forEach((user) => {
         if (user.type === PerfilEnum.TECNICO) {
@@ -87,6 +105,13 @@ export class ChamadosService {
 
     return result;
   }
+  async updateChamadoByIdSetToClosed(idChamado: number): Promise<Call> {
+    const result =
+      await this.chamadosRepository.updateChamadoSetToClosed(idChamado);
+    const call = this.chatService.getCalls().get(idChamado);
+    this.chatService.deleteCallById(idChamado);
+    return call;
+  }
 
   async updateChamadoSetToClosedWithoutTicket(
     idChamado: number,
@@ -96,10 +121,11 @@ export class ChamadosService {
     const call = this.chatService.getCalls().get(idChamado);
     const usersConnected = this.chatService.getUsersConnected();
     if (call) {
+      call.chamado = new ReturnChamadoDto(result);
       call.technicianSockets.find((c) => c.user.id);
       this.gateway.server
         .to(call.clientSocket.socketId)
-        .emit('closed-call', result);
+        .emit('closed-call', call);
 
       usersConnected.forEach((user) => {
         if (user.type === PerfilEnum.TECNICO) {

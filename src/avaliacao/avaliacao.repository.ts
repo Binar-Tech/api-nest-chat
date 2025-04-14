@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { UpdateAllAvaliacaoDto } from './dto/update-all-avaliacao.dto';
 import { Avaliacao } from './entities/avaliacao.entity';
 
 @Injectable()
@@ -97,5 +98,17 @@ export class AvaliacaoRepository {
     });
 
     return question[0];
+  }
+
+  async updateAllQuestions(questions: UpdateAllAvaliacaoDto[]): Promise<any> {
+    questions.map(async (question) => {
+      await new Promise<any[]>((resolve, reject) => {
+        this.db.query(
+          'UPDATE ticket_avaliacao SET nota = ? WHERE id = ?',
+          [question.nota, question.idQuestion],
+          (err, result) => (err ? reject(err) : resolve(result)),
+        );
+      });
+    });
   }
 }

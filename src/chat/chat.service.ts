@@ -35,7 +35,7 @@ export class ChatService {
     this.listCalls();
   }
   private async listCalls() {
-    const calls = await this.chamadosService.findChamadosByStatusOpen();
+    const calls = await this.chamadosService.findChamadosByStatusNotClosed();
     calls.map((call) => {
       const called: Call = {
         chamado: call,
@@ -51,6 +51,10 @@ export class ChatService {
 
   getCalls(): Map<number, Call> {
     return this.calls;
+  }
+
+  deleteCallById(idChamado: number) {
+    this.calls.delete(idChamado);
   }
 
   insertCall(chamado: ReturnChamadoDto) {

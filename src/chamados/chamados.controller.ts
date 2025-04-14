@@ -62,6 +62,24 @@ export class ChamadosController {
     }
   }
 
+  @Patch('/close/:idChamado')
+  async updateChamadoByIdSetToClosed(
+    @Param('idChamado') idChamado: string, // Extrai corretamente da rota
+    @Res() res: Response, // Indica explicitamente que estamos usando Response
+  ) {
+    try {
+      const result = await this.chamadosService.updateChamadoByIdSetToClosed(
+        Number(idChamado),
+      );
+      return res.status(HttpStatus.OK).json(result);
+    } catch (error) {
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        message: 'Erro ao atualizar o chamado',
+        error: error.message,
+      });
+    }
+  }
+
   @Patch('/withoutticket/:idChamado')
   async updateChamadoSetToClosedWithoutticket(
     @Param('idChamado') idChamado: string,

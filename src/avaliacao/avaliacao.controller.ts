@@ -8,6 +8,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { AvaliacaoService } from './avaliacao.service';
+import { UpdateAllAvaliacaoDto } from './dto/update-all-avaliacao.dto';
 import { UpdateAvaliacaoDto } from './dto/update-avaliacao.dto';
 
 @Controller('avaliacao')
@@ -27,12 +28,20 @@ export class AvaliacaoController {
     return await this.avaliacaoService.findQuestionsByIdChamado(+id);
   }
 
+  @Patch('/all/:idChamado')
+  async updateAll(
+    @Body() body: UpdateAllAvaliacaoDto[],
+    @Param('idChamado') idChamado: number,
+  ) {
+    return await this.avaliacaoService.updateAll(body, +idChamado);
+  }
+
   @Patch('/:id')
-  update(
+  async update(
     @Param('id') id: string,
     @Body() updateAvaliacaoDto: UpdateAvaliacaoDto,
   ) {
-    return this.avaliacaoService.update(id, updateAvaliacaoDto);
+    return await this.avaliacaoService.update(id, updateAvaliacaoDto);
   }
 
   @Delete(':id')
