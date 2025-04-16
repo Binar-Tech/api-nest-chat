@@ -308,15 +308,18 @@ export class ChatService {
       }
 
       if (call.clientSocket) {
-        client.to(call.clientSocket.socketId).emit('entered-call', user.nome);
+        client
+          .to(call.clientSocket.socketId)
+          .emit('entered-call', { user, call });
       }
 
       // Enviar a mensagem para todos os técnicos do chat
       if (call.technicianSockets.length > 0) {
         call.technicianSockets.forEach((tecnico) => {
-          if (client.id === tecnico.user.socketId)
-            client.emit('entered-call', user.nome);
-          else client.to(tecnico.user.socketId).emit('entered-call', user.nome);
+          if (client.id != tecnico.user.socketId)
+            client
+              .to(tecnico.user.socketId)
+              .emit('entered-call', { user, call });
         });
       }
 
@@ -335,15 +338,18 @@ export class ChatService {
       ExitCall(user, message.chatId, this.calls, message.role);
 
       if (call.clientSocket) {
-        client.to(call.clientSocket.socketId).emit('leaved-call', call);
+        client
+          .to(call.clientSocket.socketId)
+          .emit('leaved-call', { user, call });
       }
 
       // Enviar a mensagem para todos os técnicos do chat
       if (call.technicianSockets.length > 0) {
         call.technicianSockets.forEach((tecnico) => {
-          if (client.id === tecnico.user.socketId)
-            client.emit('entered-call', call);
-          else client.to(tecnico.user.socketId).emit('leaved-call', call);
+          if (client.id != tecnico.user.socketId)
+            client
+              .to(tecnico.user.socketId)
+              .emit('leaved-call', { user, call });
         });
       }
 

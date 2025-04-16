@@ -115,7 +115,7 @@ export async function ExitCall(
   //remover e insrir novamente o user conforme o role
   existingCall.technicianSockets.forEach((existingUser, index) => {
     if (existingUser.user.id === user.id) {
-      existingCall.technicianSockets.splice(index, 1);
+      existingCall.technicianSockets[index].role = RoleEnum.OBSERVER;
     }
   });
 
