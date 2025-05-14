@@ -59,7 +59,7 @@ export class MessagesRepository {
         );
       });
 
-      if (result) {
+      if (result.length > 0) {
         idReferencia = Number(result[0].id_mensagem);
       } else {
         return []; // Nenhuma mensagem encontrada
