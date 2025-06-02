@@ -97,22 +97,28 @@ export class FtpService {
       const dados: CreateMessageDto = JSON.parse(body);
 
       const client = await this.connectFtp();
-      const remotePath = `${cnpj}/${file.filename}`;
+      //client.ftp.verbose = true;
+      const remoteDir = `${cnpj}`;
+      const remotePath = `${remoteDir}/${file.filename}`;
 
-      // Faz o upload do arquivo para o FTP
-      await client.uploadFrom(file.path, remotePath);
+      // ✅ Garante que o diretório remoto existe
+      await client.ensureDir(remoteDir);
+
+      // ✅ Faz o upload
+      await client.uploadFrom(file.path, file.filename);
+
       client.close();
 
-      // Remove o arquivo do servidor após upload
+      // ✅ Remove o arquivo local
       await unlink(file.path);
 
-      dados.caminho_arquivo_ftp = cnpj;
+      dados.caminho_arquivo_ftp = remoteDir;
       dados.nome_arquivo = file.filename;
       dados.mensagem = null;
 
       return dados;
     } catch (error) {
-      console.error('Erro no upload do arquivo', error.message);
+      console.error('Erro no upload do arquivo', error);
       throw new InternalServerErrorException(
         'Erro ao fazer upload para o FTP.',
       );

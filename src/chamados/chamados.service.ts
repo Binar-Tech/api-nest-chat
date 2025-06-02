@@ -92,10 +92,11 @@ export class ChamadosService {
     await this.avaliacaoService.create(idChamado);
 
     if (call) {
-      this.gateway.server
-        .to(call.clientSocket.socketId)
-        .emit('closed-call', call);
-
+      if (call.clientSocket && call.clientSocket.socketId) {
+        this.gateway.server
+          .to(call.clientSocket.socketId)
+          .emit('closed-call', call);
+      }
       usersConnected.forEach((user) => {
         if (user.type === PerfilEnum.TECNICO) {
           this.gateway.server.to(user.socketId).emit('closed-call', result);
@@ -123,9 +124,11 @@ export class ChamadosService {
     if (call) {
       call.chamado = new ReturnChamadoDto(result);
       call.technicianSockets.find((c) => c.user.id);
-      this.gateway.server
-        .to(call.clientSocket.socketId)
-        .emit('closed-call', call);
+      if (call.clientSocket && call.clientSocket.socketId) {
+        this.gateway.server
+          .to(call.clientSocket.socketId)
+          .emit('closed-call', call);
+      }
 
       usersConnected.forEach((user) => {
         if (user.type === PerfilEnum.TECNICO) {
