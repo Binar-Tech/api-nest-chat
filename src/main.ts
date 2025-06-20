@@ -14,6 +14,7 @@ const corsOptions = {
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  dotenv.config();
   app.enableCors(corsOptions);
   app.use((req, res, next) => {
     res.setHeader('X-Frame-Options', 'ALLOW-FROM *'); // Permite iframes de qualquer domínio
