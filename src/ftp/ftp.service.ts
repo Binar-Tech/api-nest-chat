@@ -90,6 +90,7 @@ export class FtpService {
     cnpj: string,
   ): Promise<CreateMessageDto> {
     try {
+      console.log('Iniciando upload do arquivo para o FTP...', file);
       if (!file) {
         throw new InternalServerErrorException('Arquivo não enviado.');
       }
@@ -115,6 +116,8 @@ export class FtpService {
       dados.caminho_arquivo_ftp = remoteDir;
       dados.nome_arquivo = file.filename;
       dados.mensagem = null;
+
+      console.log('Finalizou upload do arquivo para o FTP...', dados);
 
       return dados;
     } catch (error) {

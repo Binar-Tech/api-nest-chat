@@ -58,6 +58,9 @@ export class FtpController {
           callback(null, `${uniqueSuffix}${ext}`);
         },
       }),
+      limits: {
+        fileSize: 500 * 1024 * 1024, // Limite de 500MB
+      },
     }),
   )
   async uploadFile(
