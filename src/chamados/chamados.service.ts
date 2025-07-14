@@ -6,6 +6,7 @@ import { Call } from 'src/chat/interface/call.interface';
 import { Gateway } from 'src/gateway/gateway';
 import { ChamadosRepository } from './chamados.repository';
 import { CreateChamadoDto } from './dtos/create-chamado.dto';
+import { LastSevenCallsDto } from './dtos/lastSevenCalls.dto';
 import { ReturnChamadoDto } from './dtos/returnChamado.dto';
 import { StatusChamadoEnum } from './enum/status-chamado.enum';
 import { Chamado } from './interface/chamado.interface';
@@ -114,6 +115,16 @@ export class ChamadosService {
     return call;
   }
 
+  async findLastSevenCalls(): Promise<LastSevenCallsDto[]> {
+    const result = await this.chamadosRepository.findLastSevenCalls();
+
+    if (result) {
+      return result.map((chamado) => new LastSevenCallsDto(chamado));
+    }
+
+    return [];
+  }
+
   async updateChamadoSetToClosedWithoutTicket(
     idChamado: number,
   ): Promise<Chamado> {
@@ -144,6 +155,21 @@ export class ChamadosService {
     }
 
     return result;
+  }
+
+  async findAllChamadosPaginated(
+    skip: string,
+    limit: string,
+  ): Promise<ReturnChamadoDto[]> {
+    const result = await this.chamadosRepository.findAllChamadosPaginated(
+      skip,
+      limit,
+    );
+    if (result) {
+      return result.map((chamado) => new ReturnChamadoDto(chamado));
+    }
+
+    return [];
   }
 
   async createChamado(chamado: CreateChamadoDto): Promise<ReturnChamadoDto> {
