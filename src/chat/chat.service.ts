@@ -243,17 +243,29 @@ export class ChatService {
     if (call) {
       //VERIFICA SE É TECNICO QUE ESTÁ ENVIANDO A MENSAGEM
       if (data.remetente === 'TECNICO') {
-        this.calls.get(data.id_chamado).technicianSockets.forEach((tech) => {
-          if (tech.user.socketId === client.id) {
-            if (tech.role === RoleEnum.OBSERVER) {
-              cancel = true;
-            }
-          }
-        });
-      }
+        // this.calls.get(data.id_chamado).technicianSockets.forEach((tech) => {
+        //   if (tech.user.socketId === client.id) {
+        //     if (tech.role === RoleEnum.OBSERVER) {
+        //       cancel = true;
+        //     }
+        //   }
+        // });
 
-      if (cancel) {
-        return;
+        const socketIndex = this.calls
+          .get(data.id_chamado)
+          .technicianSockets.findIndex(
+            (tech) => tech.user.socketId === client.id,
+          );
+        if (socketIndex < 0) {
+          return;
+        } else {
+          const sockRole = this.calls.get(data.id_chamado).technicianSockets[
+            socketIndex
+          ].role;
+          if (sockRole == RoleEnum.OBSERVER) {
+            return;
+          }
+        }
       }
 
       // Salvar a mensagem no banco de dados (implementar lógica)
