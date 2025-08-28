@@ -1,4 +1,4 @@
-import { Message } from 'src/messages/entities/message.entity';
+import { ReturnMessageDto } from 'src/messages/dto/return-message.dto';
 
 export class ReturnMessageSocketDto {
   id_mensagem: number;
@@ -11,7 +11,7 @@ export class ReturnMessageSocketDto {
   id_tecnico: string;
   tecnico_responsavel: string;
 
-  constructor(message: Message, idChamado: number) {
+  constructor(message: ReturnMessageDto, idChamado: number) {
     this.id_mensagem = message.id_mensagem;
     this.id_chamado = idChamado;
     this.data = message.data;

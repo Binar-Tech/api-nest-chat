@@ -349,6 +349,13 @@ export class ChatService {
 
       ExitCall(user, message.chatId, this.calls, message.role);
 
+      if (message.role === RoleEnum.OBSERVER) {
+        console.log(
+          `Técnico ${user.nome} saiu do chat ${message.chatId} como ${message.role}.`,
+        );
+        return;
+      }
+
       if (call.clientSocket) {
         client
           .to(call.clientSocket.socketId)

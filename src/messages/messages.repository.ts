@@ -14,12 +14,21 @@ export class MessagesRepository {
     id_chamado: number,
     skip: string,
     limit: string,
-  ): Promise<Message[]> {
+  ): Promise<ReturnMessageDto[]> {
     //const db = this.connectionService.getMainDatabase();
     //ROWS (:limit * (:skyp - 1)) + 1 TO (:limit * :skyp)`,
     const result = await new Promise<Message[]>((resolve, reject) => {
       this.db.query(
-        `SELECT * FROM MENSAGENS WHERE ID_CHAMADO = ? ORDER BY ID_MENSAGEM DESC
+        `SELECT m.*, r.id_mensagem AS reply_id_mensagem,
+          r.data AS reply_data,
+          r.nome_arquivo AS reply_nome_arquivo,
+          r.caminho_arquivo_ftp AS reply_caminho_arquivo_ftp,
+          r.mensagem AS reply_mensagem,
+          r.remetente AS reply_remetente,
+          r.tecnico_responsavel AS reply_tecnico_responsavel
+          FROM MENSAGENS m 
+          LEFT JOIN MENSAGENS r ON m.id_mensagem_reply = r.id_mensagem
+          WHERE m.ID_CHAMADO = ? ORDER BY m.ID_MENSAGEM DESC   
          ROWS (? * (? - 1)) + 1 TO (? * ?)`,
         [id_chamado, limit ?? 999999, skip ?? 1, limit ?? 999999, skip ?? 1],
         (err, result) => {
@@ -40,7 +49,7 @@ export class MessagesRepository {
     cnpj: string,
     operador: string,
     limit: string,
-  ): Promise<Message[]> {
+  ): Promise<ReturnMessageDto[]> {
     let idReferencia = id_mensagem;
     // 1. Se id_mensagem for null, buscar o maior ID_MENSAGEM desse operador e cnpj
     if (!id_mensagem) {
@@ -87,7 +96,7 @@ export class MessagesRepository {
     return result.map((chamado) => new ReturnMessageDto(chamado));
   }
 
-  async createMessage(message: CreateMessageDto): Promise<Message> {
+  async createMessage(message: CreateMessageDto): Promise<ReturnMessageDto> {
     //const db = this.connectionService.getMainDatabase();
     const result = await new Promise<Message>((resolve, reject) => {
       const date = getActualDateTimeFormattedToFirebird();
